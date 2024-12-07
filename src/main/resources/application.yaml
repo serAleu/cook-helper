@@ -1,29 +1,41 @@
 spring:
   application:
     name: cook-helper
+  ssl:
+    bundle:
+      pem:
+        rus:
+          truststore:
+            certificate: src/main/resources/certs/russian_trusted_sub_ca.cer
 
 server:
   port: 515
 
 web:
-  feign:
-    gigachat:
-      auth:
-        url: ${WEB_GIGACHAT_AUTH_URL:https://ngw.devices.sberbank.ru:9443}
-        #  ??????????? ???? Client ID:Client Secret ? base64 ? ??????????? ?? ? ????????? ??????? ?? ????????? Access Token
-        client-id: f0489eac-7645-49fc-bb47-e43edf190732
-        client-secret: 80e17022-4169-4872-8463-2a46f5ce4177
-        payload: scope=GIGACHAT_API_PERS
-        #  Authorization Key ?????????? ? ????????? ??????? ?? ????????? Access Token.
-        #  ???????? ???? ???????? ??????????? ??????????? ???? Client ID:Client Secret ? base64
-        key: ZjA0ODllYWMtNzY0NS00OWZjLWJiNDctZTQzZWRmMTkwNzMyOjgwZTE3MDIyLTQxNjktNDg3Mi04NDYzLTJhNDZmNWNlNDE3Nw==
-      client:
-        base-url: ${WEB_GIGACHAT_CLIENT_BASE_URL:https://gigachat.devices.sberbank.ru}
-      options:
-        connect-timeout-millis: ${CONNECT_TIMEOUT_MILLIS:300}
-        read-timeout-millis: ${READ_TIMEOUT_MILLIS:3000}
-        follow-redirects: ${FOLLOW_REDIRECT:true}
-      retryer:
-        period: ${RETRYER_PERIOD:100}
-        duration: ${RETRYER_DURATION:1}
-        max-attempts: ${RETRYER_MAX_ATTEMPTS:1}
+  gigachat:
+    options:
+      connect-timeout-millis: ${CONNECT_TIMEOUT_MILLIS:300}
+      read-timeout-millis: ${READ_TIMEOUT_MILLIS:3000}
+      follow-redirects: ${FOLLOW_REDIRECT:true}
+    retryer:
+      period: ${RETRYER_PERIOD:100}
+      duration: ${RETRYER_DURATION:1}
+      max-attempts: ${RETRYER_MAX_ATTEMPTS:1}
+    auth:
+      base-url: ${WEB_GIGACHAT_AUTH_BASE_URL:https://ngw.devices.sberbank.ru:9443}
+      uri: /api/v2/oauth
+      client-id: f0489eac-7645-49fc-bb47-e43edf190732
+      client-secret: 80e17022-4169-4872-8463-2a46f5ce4177
+      payload: scope=GIGACHAT_API_PERS
+      key: ZjA0ODllYWMtNzY0NS00OWZjLWJiNDctZTQzZWRmMTkwNzMyOjgwZTE3MDIyLTQxNjktNDg3Mi04NDYzLTJhNDZmNWNlNDE3Nw==
+      last-auth-key-path: src/main/resources/gigachat/last_auth_key.txt
+    client:
+      base-url: ${WEB_GIGACHAT_CLIENT_BASE_URL:https://gigachat.devices.sberbank.ru}
+      uri: /api/v1/chat/completions
+      request:
+        role: user
+        model: GigaChat
+        content: |
+          Привет. Ты шеф повар в ресторане. Даны следующие ингридиенты - 2 картошины, морковка, соль, 
+          зелень, творог, 2 яйца, хлопья, кофе, мед, кетчуп, зелень, луковица. Напиши 5 вариантов блюд 
+          и пришли их списком используя исключительно только те ингридиенты, которые я написал выше.
