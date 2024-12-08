@@ -19,7 +19,6 @@ public class CookHelperScheduler {
 
     @Scheduled(fixedDelay = 10000)
     public void collGigachatAuth() throws IOException {
-        gigachatAuthService.updateAuthKey();
         gigachatClientService.askGigachatQuestion();
     }
 }

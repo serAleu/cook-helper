@@ -8,7 +8,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import ru.seraleu.gigachat.utils.GigachatStaticContext;
+import ru.seraleu.gigachat.utils.GigachatAuthContext;
 import ru.seraleu.gigachat.web.dto.requests.RequestDto;
 import ru.seraleu.gigachat.web.dto.requests.RequestMessageDto;
 import ru.seraleu.gigachat.web.dto.responses.ResponseDto;
@@ -22,6 +22,7 @@ public class GigachatClient {
 
     private final RestTemplate gigachatClientRestTemplate;
     private final ObjectMapper mapper;
+    private GigachatAuthContext authContext;
     @Value("${web.gigachat.client.uri}")
     private String webGigachatClientUri;
     @Value("${web.gigachat.client.request.role}")
@@ -35,10 +36,9 @@ public class GigachatClient {
         String response = null;
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + GigachatStaticContext.authKey);
+            headers.set("Authorization", "Bearer " + GigachatAuthContext.accessToken);
             HttpEntity<String> request = new HttpEntity<>(mapper.writeValueAsString(createRequest()), headers);
             response = gigachatClientRestTemplate.postForObject(webGigachatClientUri, request, String.class);
-            System.out.println(response);
             return mapper.readValue(response, ResponseDto.class);
         } catch (Exception e) {
             log.error("Error while getting Giga auth key. response = {}, stackTrace: {}", response, e.getStackTrace());

@@ -44,8 +44,9 @@ public class GigachatRestClientConfig {
     }
 
     @Bean("gigachatClientRestTemplate")
-    public RestTemplate gigachatClientRestTemplate() {
+    public RestTemplate gigachatClientRestTemplate(SslBundles sslBundles) {
         return new RestTemplateBuilder()
+                .sslBundle(sslBundles.getBundle("rus"))
                 .rootUri(webGigachatClientBaseUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)

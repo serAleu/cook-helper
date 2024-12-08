@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import ru.seraleu.gigachat.utils.GigachatAuthContext;
 
 @Service
 @RequiredArgsConstructor
@@ -26,10 +27,11 @@ public class GigachatAuthClient {
             responseJson = gigachatAuthRestTemplate.postForObject(webGigachatAuthUri, webGigachatAuthPayload, String.class);
             System.out.println("AUTH RESPONSE " + responseJson);
             JsonNode jsonNode = mapper.readTree(responseJson);
-            return jsonNode.get("access_token").asText();
+            GigachatAuthContext.accessToken = jsonNode.get("access_toke").asText();
+            GigachatAuthContext.expiresAt = jsonNode.get("expires_at").asLong();
         } catch (Exception e) {
             log.error("Error while getting Giga auth key. response = {}, stackTrace: {}", responseJson, e.getStackTrace());
-            return null;
         }
+        return responseJson;
     }
 }
