@@ -1,5 +1,6 @@
 package ru.seraleu.gigachat.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -8,13 +9,13 @@ import org.springframework.stereotype.Service;
 import ru.seraleu.gigachat.utils.GigachatAuthContext;
 import ru.seraleu.gigachat.web.clients.GigachatAuthClient;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.TimeZone;
+
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
+import static ru.seraleu.gigachat.utils.GigachatAuthContext.setAccessTokenAndExpiresAt;
 
 @Service
 @RequiredArgsConstructor
@@ -22,26 +23,47 @@ import java.util.TimeZone;
 public class GigachatAuthService {
 
     private final GigachatAuthClient gigachatAuthClient;
+    private final ObjectMapper mapper;
     @Value("${web.gigachat.auth.last-auth-key-path}")
     private String webGigachatAuthLastAuthKeyPath;
 
     public void updateAuthKey() throws IOException {
         if(StringUtils.isBlank(GigachatAuthContext.accessToken) || isAccessTokenExpired()) {
-            String responseJson = null;
-            synchronized (GigachatAuthContext.class) {
-                responseJson = gigachatAuthClient.getGigachatAuthKey();
-            }
-            if(!StringUtils.isBlank(GigachatAuthContext.accessToken)) {
-                keepLastAuthKey(responseJson);
+            getAccessTokenFromFile();
+            if (isAccessTokenExpired()) {
+                String responseJson;
+                synchronized (GigachatAuthContext.class) {
+                    responseJson = gigachatAuthClient.getGigachatAuthKey();
+                }
+                if (!StringUtils.isBlank(GigachatAuthContext.accessToken)) {
+                    keepLastAuthKey(responseJson);
+                }
             }
         }
     }
 
     private boolean isAccessTokenExpired() {
         if (GigachatAuthContext.expiresAt != null) {
-            return LocalDateTime.now().isAfter(LocalDateTime.ofInstant(Instant.ofEpochMilli(GigachatAuthContext.expiresAt), TimeZone.getDefault().toZoneId()));
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime expirationTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(GigachatAuthContext.expiresAt), TimeZone.getDefault().toZoneId());
+            boolean nowIsAfterExpirationTime = now.isAfter(expirationTime);
+            log.info("Giga token time expire checking. now = {}, expirationTime = {}, nowIsAfterExpirationTime = {}", now, expirationTime, nowIsAfterExpirationTime);
+            return nowIsAfterExpirationTime;
         }
         return true;
+    }
+
+    private void getAccessTokenFromFile() {
+        try {
+            File file = new File(webGigachatAuthLastAuthKeyPath);
+            if(file.isFile()) {
+                try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                    setAccessTokenAndExpiresAt(mapper, reader.readLine());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Exception while getting last giga auth json from file. {}", getStackTrace(e));
+        }
     }
 
     @SuppressWarnings({"ResultOfMethodCallIgnored"})
@@ -52,7 +74,7 @@ public class GigachatAuthService {
         try (PrintWriter writer = new PrintWriter(file)) {
             writer.write(responseJson);
         } catch (IOException e) {
-            log.error("Error while Gigachat auth key saving. stackTrace: {}", Arrays.toString(e.getStackTrace()));
+            log.error("Error while Gigachat auth key saving. stackTrace: {}", getStackTrace(e));
         }
     }
 

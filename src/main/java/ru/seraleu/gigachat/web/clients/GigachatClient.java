@@ -15,6 +15,8 @@ import ru.seraleu.gigachat.web.dto.responses.ResponseDto;
 
 import java.util.Collections;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -37,16 +39,30 @@ public class GigachatClient {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + GigachatAuthContext.accessToken);
-            HttpEntity<String> request = new HttpEntity<>(mapper.writeValueAsString(createRequest()), headers);
+            HttpEntity<String> request = new HttpEntity<>(mapper.writeValueAsString(createRequest(webGigachatClientRequestContent)), headers);
             response = gigachatClientRestTemplate.postForObject(webGigachatClientUri, request, String.class);
             return mapper.readValue(response, ResponseDto.class);
         } catch (Exception e) {
-            log.error("Error while getting Giga auth key. response = {}, stackTrace: {}", response, e.getStackTrace());
+            log.error("Error while getting Giga auth key. response = {}, stackTrace: {}", response, getStackTrace(e));
             return null;
         }
     }
 
-    private RequestDto createRequest() {
+    public ResponseDto askGigachatQuestion(String question) {
+        String response = null;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + GigachatAuthContext.accessToken);
+            HttpEntity<String> request = new HttpEntity<>(mapper.writeValueAsString(createRequest(question)), headers);
+            response = gigachatClientRestTemplate.postForObject(webGigachatClientUri, request, String.class);
+            return mapper.readValue(response, ResponseDto.class);
+        } catch (Exception e) {
+            log.error("Error while getting Giga auth key. response = {}, stackTrace: {}", response, getStackTrace(e));
+            return null;
+        }
+    }
+
+    private RequestDto createRequest(String question) {
         return new RequestDto()
                 .setMaxTokens(512)
                 .setN(1)
@@ -56,6 +72,6 @@ public class GigachatClient {
                 .setUpdateInterval(0)
                 .setMessages(Collections.singletonList(new RequestMessageDto()
                         .setRole(webGigachatClientRequestRole)
-                        .setContent(webGigachatClientRequestContent)));
+                        .setContent(question)));
     }
 }

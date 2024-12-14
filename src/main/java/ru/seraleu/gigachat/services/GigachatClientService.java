@@ -8,6 +8,8 @@ import ru.seraleu.gigachat.web.dto.responses.ResponseDto;
 
 import java.io.IOException;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -19,6 +21,18 @@ public class GigachatClientService {
     public void askGigachatQuestion() throws IOException {
         gigachatAuthService.updateAuthKey();
         ResponseDto responseDto = gigachatClient.askGigachatQuestion();
-        System.out.println("GIGA REPLY " + responseDto.toString());
+    }
+
+    public String askGigachatQuestionFromTelegram(String question) {
+        try {
+            gigachatAuthService.updateAuthKey();
+            System.out.println("GIGA REQUEST " + question);
+            ResponseDto responseDto = gigachatClient.askGigachatQuestion(question);
+            System.out.println("GIGA REPLY " + responseDto.getChoices().get(0).getMessage().getContent());
+            return responseDto.getChoices().get(0).getMessage().getContent();
+        } catch (IOException e) {
+            log.error("Exception while gigachat response processing. {}", getStackTrace(e));
+            return "Чет я хз че ответить чел";
+        }
     }
 }

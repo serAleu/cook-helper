@@ -12,6 +12,11 @@ server:
   port: 515
 
 web:
+  telegram:
+    bot-username: cookassistbot
+    admin-chat-id: 1026435138
+    auth:
+      token: ${WEB_TELEGRAM_AUTH_TOKEN}
   gigachat:
     options:
       connect-timeout-millis: ${CONNECT_TIMEOUT_MILLIS:300}
@@ -24,10 +29,10 @@ web:
     auth:
       base-url: ${WEB_GIGACHAT_AUTH_BASE_URL:https://ngw.devices.sberbank.ru:9443}
       uri: /api/v2/oauth
-      client-id: f0489eac-7645-49fc-bb47-e43edf190732
-      client-secret: 80e17022-4169-4872-8463-2a46f5ce4177
+      client-id: ${WEB_GIGACHAT_AUTH_CLIENT_ID}
+      client-secret: ${WEB_GIGACHAT_AUTH_CLIENT_SECRET}
       payload: scope=GIGACHAT_API_PERS
-      key: ZjA0ODllYWMtNzY0NS00OWZjLWJiNDctZTQzZWRmMTkwNzMyOjgwZTE3MDIyLTQxNjktNDg3Mi04NDYzLTJhNDZmNWNlNDE3Nw==
+      key: ${WEB_GIGACHAT_AUTH_KEY}
       last-auth-key-path: src/main/resources/gigachat/last_auth_key.txt
     client:
       base-url: ${WEB_GIGACHAT_CLIENT_BASE_URL:https://gigachat.devices.sberbank.ru}
@@ -36,6 +41,6 @@ web:
         role: user
         model: GigaChat
         content: |
-          Привет. Ты шеф повар в ресторане. Даны следующие ингридиенты - 2 картошины, морковка, соль, 
-          зелень, творог, 2 яйца, хлопья, кофе, мед, кетчуп, зелень, луковица. Напиши 5 вариантов блюд 
-          и пришли их списком используя исключительно только те ингридиенты, которые я написал выше.
+          Привет. Ты шеф повар в ресторане. Даны следующие ингридиенты - два яйца, зеленая гречка, макароны, помидор, творог, имбирь.
+          Напиши 5 вариантов блюд и способы их приготовления и пришли их списком используя исключительно только те ингридиенты, которые 
+          я написал выше.

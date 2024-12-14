@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
+
 @Configuration
 @EnableScheduling
 @Slf4j
@@ -33,7 +35,7 @@ public class CookHelperConfiguration {
                 try {
                     gigachatAuthContext = objectMapper().readValue(lastAuthResponseJson, GigachatAuthContext.class);
                 } catch (Exception e) {
-                    log.error("Exception while getting Gigachat last auth context from the file. last_response_json = {}, exception = {}", lastAuthResponseJson, e.getStackTrace());
+                    log.error("Exception while getting Gigachat last auth context from the file. last_response_json = {}, exception = {}", lastAuthResponseJson, getStackTrace(e));
                 }
             }
         }
