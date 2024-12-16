@@ -1,6 +1,8 @@
 spring:
   application:
     name: cook-helper
+  profiles:
+    active: giga, telegram
   ssl:
     bundle:
       pem:
@@ -18,6 +20,9 @@ web:
     auth:
       token: ${WEB_TELEGRAM_AUTH_TOKEN}
   gigachat:
+    status:
+      success: success
+      failure: failure
     options:
       connect-timeout-millis: ${CONNECT_TIMEOUT_MILLIS:300}
       read-timeout-millis: ${READ_TIMEOUT_MILLIS:3000}
@@ -37,10 +42,3 @@ web:
     client:
       base-url: ${WEB_GIGACHAT_CLIENT_BASE_URL:https://gigachat.devices.sberbank.ru}
       uri: /api/v1/chat/completions
-      request:
-        role: user
-        model: GigaChat
-        content: |
-          Привет. Ты шеф повар в ресторане. Даны следующие ингридиенты - два яйца, зеленая гречка, макароны, помидор, творог, имбирь.
-          Напиши 5 вариантов блюд и способы их приготовления и пришли их списком используя исключительно только те ингридиенты, которые 
-          я написал выше.

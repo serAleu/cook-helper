@@ -2,8 +2,11 @@ package ru.seraleu.gigachat.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.seraleu.gigachat.GigachatUtils;
 import ru.seraleu.gigachat.web.clients.GigachatClient;
+import ru.seraleu.gigachat.web.dto.requests.RequestDto;
 import ru.seraleu.gigachat.web.dto.responses.ResponseDto;
 
 import java.io.IOException;
@@ -17,22 +20,37 @@ public class GigachatClientService {
 
     private final GigachatClient gigachatClient;
     private final GigachatAuthService gigachatAuthService;
+    private final GigachatUtils gigachatUtils;
+    @Value("${web.gigachat.error-messages-for-user.stupid-giga}")
+    private String webGigachatErrorsStupidGiga;
+    @Value("${web.gigachat.error-messages-for-user.stupid-user}")
+    private String webGigachatErrorsStupidUser;
 
-    public void askGigachatQuestion() throws IOException {
-        gigachatAuthService.updateAuthKey();
-        ResponseDto responseDto = gigachatClient.askGigachatQuestion();
-    }
-
-    public String askGigachatQuestionFromTelegram(String question) {
+    public String askGigachatQuestion(String question) {
         try {
             gigachatAuthService.updateAuthKey();
-            System.out.println("GIGA REQUEST " + question);
-            ResponseDto responseDto = gigachatClient.askGigachatQuestion(question);
-            System.out.println("GIGA REPLY " + responseDto.getChoices().get(0).getMessage().getContent());
-            return responseDto.getChoices().get(0).getMessage().getContent();
+            RequestDto requestDto = gigachatUtils.createGigaRequestForDishesListGetting(question);
+            ResponseDto responseDto = gigachatClient.askGigachatQuestion(requestDto);
+            if(gigachatUtils.isValidResponse(responseDto)) {
+                if(gigachatUtils.isResponseNotStartWithGigachatStatus(responseDto)) {
+                    responseDto = askGigachatQuestionAgainForValidResponse(requestDto, question);
+                    if(gigachatUtils.isValidResponse(responseDto)) {
+                        if (gigachatUtils.isResponseNotStartWithGigachatStatus(responseDto)) {
+                            return webGigachatErrorsStupidGiga;
+                        }
+                    }
+                }
+                return gigachatUtils.prepareGigaResponseForUser(responseDto);
+            }
         } catch (IOException e) {
             log.error("Exception while gigachat response processing. {}", getStackTrace(e));
-            return "Чет я хз че ответить чел";
         }
+        return webGigachatErrorsStupidUser;
+    }
+
+    private ResponseDto askGigachatQuestionAgainForValidResponse(RequestDto requestDto, String question) throws IOException {
+        gigachatAuthService.updateAuthKey();
+        requestDto = gigachatUtils.updateGigaRequestForRerequestDishesListGetting(requestDto, question);
+        return gigachatClient.askGigachatQuestion(requestDto);
     }
 }
