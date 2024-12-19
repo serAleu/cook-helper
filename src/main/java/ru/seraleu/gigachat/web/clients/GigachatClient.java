@@ -32,7 +32,7 @@ public class GigachatClient {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + GigachatAuthContext.accessToken);
             String requestJson = mapper.writeValueAsString(requestDto);
-            System.out.println(requestJson);
+            System.out.println("REQUEST JSON: " + requestJson);
             HttpEntity<String> request = new HttpEntity<>(requestJson, headers);
             response = gigachatClientRestTemplate.postForObject(webGigachatClientUri, request, String.class);
             System.out.println("GIGA REPLY " + response);

@@ -25,27 +25,43 @@ public class GigachatClientService {
     private String webGigachatErrorsStupidGiga;
     @Value("${web.gigachat.error-messages-for-user.stupid-user}")
     private String webGigachatErrorsStupidUser;
+    @Value("${web.gigachat.error-messages-for-user.incorrect-request}")
+    private String webGigachatErrorsIncorrectRequest;
 
     public String askGigachatQuestion(String question) {
         try {
             gigachatAuthService.updateAuthKey();
-            RequestDto requestDto = gigachatUtils.createGigaRequestForDishesListGetting(question);
-            ResponseDto responseDto = gigachatClient.askGigachatQuestion(requestDto);
-            if(gigachatUtils.isValidResponse(responseDto)) {
-                if(gigachatUtils.isResponseNotStartWithGigachatStatus(responseDto)) {
-                    responseDto = askGigachatQuestionAgainForValidResponse(requestDto, question);
-                    if(gigachatUtils.isValidResponse(responseDto)) {
-                        if (gigachatUtils.isResponseNotStartWithGigachatStatus(responseDto)) {
+            String productsOrError = getProductsFromUserRequest(question);
+            if("FAILURE".equalsIgnoreCase(productsOrError)) {
+                return webGigachatErrorsIncorrectRequest;
+            }
+            RequestDto gigaRequestWithBehaviour = gigachatUtils.createGigaRequestForDishesListGetting(productsOrError);
+            ResponseDto gigaFinalResponse = gigachatClient.askGigachatQuestion(gigaRequestWithBehaviour);
+            if(gigachatUtils.isValidResponse(gigaFinalResponse)) {
+                if(gigachatUtils.isResponseContainGigachatStatus(gigaFinalResponse)) {
+                    gigaFinalResponse = askGigachatQuestionAgainForValidResponse(gigaRequestWithBehaviour, question);
+                    if(gigachatUtils.isValidResponse(gigaFinalResponse)) {
+                        if (gigachatUtils.isResponseContainGigachatStatus(gigaFinalResponse)) {
                             return webGigachatErrorsStupidGiga;
                         }
                     }
                 }
-                return gigachatUtils.prepareGigaResponseForUser(responseDto);
+                return gigachatUtils.prepareGigaResponseForUser(gigaFinalResponse);
             }
         } catch (IOException e) {
             log.error("Exception while gigachat response processing. {}", getStackTrace(e));
         }
         return webGigachatErrorsStupidUser;
+    }
+
+    private String getProductsFromUserRequest(String question) {
+        RequestDto gigaRequestForGettingProductList = gigachatUtils.createGigaRequestForGettingListOfProduct(question);
+        ResponseDto gigaProductsResponse = gigachatClient.askGigachatQuestion(gigaRequestForGettingProductList);
+        if(gigachatUtils.isValidResponse(gigaProductsResponse)) {
+            return gigachatUtils.parseGigaProductListResponseToString(gigaProductsResponse);
+        } else {
+            return "FAILURE";
+        }
     }
 
     private ResponseDto askGigachatQuestionAgainForValidResponse(RequestDto requestDto, String question) throws IOException {
