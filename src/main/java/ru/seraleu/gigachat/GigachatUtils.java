@@ -51,8 +51,7 @@ public class GigachatUtils {
                 .setStream(false)
                 .setModel(gigachatWebRequestModel)
                 .setRepetitionPenalty(1)
-                .setUpdateInterval(0)
-                ;
+                .setUpdateInterval(0);
     }
 
     public RequestDto createGigaRequestForDishesListGetting(String question) {

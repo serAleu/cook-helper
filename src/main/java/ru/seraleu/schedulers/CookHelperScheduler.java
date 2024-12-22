@@ -16,6 +16,6 @@ public class CookHelperScheduler {
 
     @Scheduled(fixedDelay = 10000)
     public void callGigachat() {
-        gigachatClientService.askGigachatQuestion(REQUEST);
+//        gigachatClientService.askGigachatQuestion(REQUEST);
     }
 }

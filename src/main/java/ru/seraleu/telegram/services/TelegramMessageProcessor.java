@@ -10,8 +10,10 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.seraleu.gigachat.services.GigachatClientService;
+import ru.seraleu.telegram.users.TelegramRequestType;
 import ru.seraleu.telegram.users.TelegramUser;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,24 +59,21 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
                 SendMessage message = new SendMessage();
                 TelegramUser user = getTelegramUser(update);
                 if(isRequestContainSwearing(user.getRequestsMap().get(INITIAL_REQUEST))) {
-                    message.setText(user.getRequestsMap().get(SWEAR_REQUEST));
+                    message.setText(user.getResponsesMap().get(SWEARING_RESPONSE));
                 } else {
                     if (user.getRequestsMap().get(INITIAL_REQUEST).equals("/start")) {
                         startBot(user.getChatId(), user.getUserName());
                     } else {
-                        System.out.println("GIGA REQUEST " + user.getRequestsMap().get(INITIAL_REQUEST));
                         user = gigachatClientService.askGigachatForGettingProductList(user);
-                        if(user.getResponsesMap().containsKey()) {
+                        if(user.getRequestsMap().containsKey(LIST_OF_DISHES_REQUEST)) {
                             user = gigachatClientService.askGigachatQuestion(user);
-                            response = user.getUserName() + ", вот, что я для тебя нашел: " + response;
-                            message.setChatId(user.getChatId());
-                            message.setText(user.getUserName() + ", вот, что я для тебя нашел: " + );
+                            message.setText(user.getUserName() + ", вот, что я для тебя нашел: " + user.getRequestsMap().get(LIST_OF_DISHES_REQUEST));
                         }
                     }
                 }
                 message.setChatId(user.getChatId());
                 execute(message);
-                sendStatistics(user.getRequestsMap().get(INITIAL_REQUEST), response);
+                sendStatistics(user.getRequestsMap().get(INITIAL_REQUEST), user.getRequestsMap().get(LIST_OF_DISHES_REQUEST));
             }
         } catch (TelegramApiException e) {
             log.error("Exception while telegram receiving and processing message. {}", getStackTrace(e));
@@ -85,12 +84,14 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
         return new TelegramUser()
                 .setUserName(update.getMessage().getFrom().getFirstName())
                 .setChatId(update.getMessage().getChatId())
-                .setRequestsMap(Map.of(
-                        INITIAL_REQUEST, update.getMessage().getText(),
-                        LIST_OF_PRODUCT_REQUEST, update.getMessage().getText()))
-                .setResponsesMap(Map.of(
-                        NO_RESPONSE, "no response",
-                        SWEARING_RESPONSE, telegramSwearingReply));
+                .setRequestsMap(new HashMap<>() {{
+                    put(INITIAL_REQUEST, update.getMessage().getText());
+                    put(LIST_OF_PRODUCT_REQUEST, update.getMessage().getText());
+                }})
+                .setResponsesMap(new HashMap<>() {{
+                    put(NO_RESPONSE, "no response");
+                    put(SWEARING_RESPONSE, telegramSwearingReply);
+                }});
     }
 
     private boolean isRequestContainSwearing(String requestText) {

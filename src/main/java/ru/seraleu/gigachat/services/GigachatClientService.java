@@ -36,8 +36,13 @@ public class GigachatClientService {
         try {
             gigachatAuthService.updateAuthKey();
             String gigaListOfProductsResponse = getProductsFromUserRequest(user.getRequestsMap().get(LIST_OF_PRODUCT_REQUEST));
-            if (StringUtils.isBlank(gigaListOfProductsResponse) || StringUtils.containsIgnoreCase("FAILURE", gigaListOfProductsResponse)) {
+            if (StringUtils.isBlank(gigaListOfProductsResponse)) {
                 user.getResponsesMap().put(SWEARING_RESPONSE, gigachatWebErrorsIncorrectRequest);
+                return user;
+            }
+            if(StringUtils.containsIgnoreCase("FAILURE", gigaListOfProductsResponse)) {
+                user.getResponsesMap().put(STUPID_USER_RESPONSE, gigachatWebErrorsStupidUser);
+                return user;
             }
             user.getResponsesMap().put(LIST_OF_PRODUCTS_RESPONSE, gigaListOfProductsResponse);
             user.getRequestsMap().put(LIST_OF_DISHES_REQUEST, gigaListOfProductsResponse);
@@ -59,8 +64,10 @@ public class GigachatClientService {
                     user.getResponsesMap().put(STUPID_GIGA_RESPONSE, gigachatWebErrorsStupidGiga);
                     return user;
                 }
+                user.getResponsesMap().put(LIST_OF_DISHES_RESPONSE, gigachatUtils.prepareGigaResponseForUser(gigaFinalResponse));
+            } else {
+                user.getResponsesMap().put(STUPID_GIGA_RESPONSE, gigachatWebErrorsStupidGiga);
             }
-            user.getResponsesMap().put(LIST_OF_DISHES_RESPONSE, gigachatUtils.prepareGigaResponseForUser(gigaFinalResponse));
             return user;
         } catch (IOException e) {
             log.error("Exception while gigachat response processing. {}", getStackTrace(e));
