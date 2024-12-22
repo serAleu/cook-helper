@@ -23,55 +23,53 @@ public class GigachatUtils {
 
     private final ObjectMapper mapper;
 
-    @Value("${web.gigachat.request.role}")
-    private String webGigachatRequestRole;
-    @Value("${web.gigachat.request.content}")
-    private String webGigachatRequestContent;
-    @Value("${web.gigachat.rerequest.role}")
-    private String webGigachatRerequestRole;
-    @Value("${web.gigachat.request.role}")
-    private String webGigachatRerequestContent;
-    @Value("${web.gigachat.request.model}")
-    private String webGigachatRequestModel;
-    @Value("${web.gigachat.status.success}")
-    private String webGigachatStatusSuccess;
-    @Value("${web.gigachat.status.failure}")
-    private String webGigachatStatusFailure;
-    @Value("${web.gigachat.fake-message.behaviour}")
-    private String webGigachatFakeMessageBehaviour;
-
-    @Value("${web.gigachat.fake-message.product-list}")
-    private String webGigachatFakeMessageProductList;
+    @Value("${gigachat.web.request.role}")
+    private String gigachatWebRequestRole;
+    @Value("${gigachat.web.request.content}")
+    private String gigachatWebRequestContent;
+    @Value("${gigachat.web.rerequest.role}")
+    private String gigachatWebRerequestRole;
+    @Value("${gigachat.web.request.role}")
+    private String gigachatWebRerequestContent;
+    @Value("${gigachat.web.request.model}")
+    private String gigachatWebRequestModel;
+    @Value("${gigachat.web.status.success}")
+    private String gigachatWebStatusSuccess;
+    @Value("${gigachat.web.status.failure}")
+    private String gigachatWebStatusFailure;
+    @Value("${gigachat.web.fake-message.behaviour}")
+    private String gigachatWebFakeMessageBehaviour;
+    @Value("${gigachat.web.fake-message.product-list}")
+    private String gigachatWebFakeMessageProductList;
 
     public RequestDto createGigaRequestForGettingListOfProduct(String question) {
-        RequestDto requestDto = getRequestDtoWithFakeStory(webGigachatFakeMessageProductList);
-        requestDto.getMessages().add(new RequestMessageDto().setRole(webGigachatRequestRole).setContent(question));
+        RequestDto requestDto = getRequestDtoWithFakeStory(gigachatWebFakeMessageProductList);
+        requestDto.getMessages().add(new RequestMessageDto().setRole(gigachatWebRequestRole).setContent(question));
         return requestDto
-//                .setMaxTokens(512)
-//                .setN(1)
-//                .setStream(false)
-                .setModel(webGigachatRequestModel)
-//                .setRepetitionPenalty(1)
-//                .setUpdateInterval(0)
+                .setMaxTokens(512)
+                .setN(1)
+                .setStream(false)
+                .setModel(gigachatWebRequestModel)
+                .setRepetitionPenalty(1)
+                .setUpdateInterval(0)
                 ;
     }
 
     public RequestDto createGigaRequestForDishesListGetting(String question) {
-        RequestDto requestDto = getRequestDtoWithFakeStory(webGigachatFakeMessageBehaviour);
-        requestDto.getMessages().add(new RequestMessageDto().setRole(webGigachatRequestRole).setContent(question));
+        RequestDto requestDto = getRequestDtoWithFakeStory(gigachatWebFakeMessageBehaviour);
+        requestDto.getMessages().add(new RequestMessageDto().setRole(gigachatWebRequestRole).setContent(gigachatWebRequestContent + question));
         return requestDto
-//                .setMaxTokens(512)
-//                .setN(1)
-//                .setStream(false)
-                .setModel(webGigachatRequestModel)
-//                .setRepetitionPenalty(1)
-//                .setUpdateInterval(0)
-                ;
+                .setMaxTokens(512)
+                .setN(1)
+                .setStream(false)
+                .setModel(gigachatWebRequestModel)
+                .setRepetitionPenalty(1)
+                .setUpdateInterval(0);
     }
 
     public RequestDto updateGigaRequestForRerequestDishesListGetting(RequestDto requestDto, String question) {
         List<RequestMessageDto> messages = requestDto.getMessages();
-        messages.add(new RequestMessageDto().setRole(webGigachatRerequestRole).setContent(webGigachatRerequestContent + " " + question));
+        messages.add(new RequestMessageDto().setRole(gigachatWebRerequestRole).setContent(gigachatWebRerequestContent + question));
         requestDto.setMessages(messages);
         return requestDto;
     }
@@ -83,16 +81,16 @@ public class GigachatUtils {
                 && responseDto.getChoices().get(0).getMessage().getContent() != null;
     }
 
-    public boolean isResponseContainGigachatStatus(ResponseDto responseDto) {
+    public boolean isResponseNotContainGigachatStatus(ResponseDto responseDto) {
         String response = responseDto.getChoices().get(0).getMessage().getContent();
-        return !StringUtils.containsIgnoreCase(response, webGigachatStatusSuccess)
-                && !StringUtils.containsIgnoreCase(response, webGigachatStatusFailure);
+        return !StringUtils.containsIgnoreCase(response, gigachatWebStatusSuccess)
+                && !StringUtils.containsIgnoreCase(response, gigachatWebStatusFailure);
     }
 
     public String prepareGigaResponseForUser(ResponseDto responseDto) {
         String response = responseDto.getChoices().get(0).getMessage().getContent();
-        response = StringUtils.replaceIgnoreCase(response, webGigachatStatusSuccess, "");
-        response = StringUtils.replaceIgnoreCase(response, webGigachatStatusFailure, "");
+        response = StringUtils.replaceIgnoreCase(response, gigachatWebStatusSuccess, "");
+        response = StringUtils.replaceIgnoreCase(response, gigachatWebStatusFailure, "");
         return response;
     }
 

@@ -22,14 +22,14 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 @Slf4j
 public class CookHelperConfiguration {
 
-    @Value("${web.gigachat.auth.last-auth-key-path}")
-    private String webGigachatAuthLastAuthKeyPath;
+    @Value("${gigachat.web.auth.last-auth-key-path}")
+    private String gigachatWebAuthLastAuthKeyPath;
 
     @Bean("gigachatAuthContext")
     public GigachatAuthContext gigachatAuthContext() throws IOException {
         GigachatAuthContext gigachatAuthContext = new GigachatAuthContext();
-        File file = new File(webGigachatAuthLastAuthKeyPath);
-        if(new File(webGigachatAuthLastAuthKeyPath).isFile()) {
+        File file = new File(gigachatWebAuthLastAuthKeyPath);
+        if(new File(gigachatWebAuthLastAuthKeyPath).isFile()) {
             String lastAuthResponseJson = Files.readString(file.toPath(), Charset.defaultCharset());
             if(!StringUtils.isBlank(lastAuthResponseJson)) {
                 try {

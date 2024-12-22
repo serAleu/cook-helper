@@ -9,14 +9,14 @@ import ru.seraleu.gigachat.services.GigachatClientService;
 @RequiredArgsConstructor
 public class TelegramService {
 
-    private final String telegramBotToken;
-    private final GigachatClientService gigachatClientService;
-    private final TelegramMessageProcessor telegramMessageProcessor;
-
-    @Value("${web.telegram.bot-username}")
-    private String webTelegramBotUsername;
-    @Value("${web.telegram.admin-chat-id}")
-    private Long webTelegramAdminChatId;
+//    private final String telegramBotToken;
+//    private final GigachatClientService gigachatClientService;
+//    private final TelegramMessageProcessor telegramMessageProcessor;
+//
+//    @Value("${web.telegram.bot-username}")
+//    private String webTelegramBotUsername;
+//    @Value("${web.telegram.admin-chat-id}")
+//    private Long webTelegramAdminChatId;
 
 
 

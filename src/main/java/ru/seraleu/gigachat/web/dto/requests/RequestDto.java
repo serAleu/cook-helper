@@ -17,14 +17,14 @@ public class RequestDto {
     private String model;
     @JsonProperty("messages")
     private List<RequestMessageDto> messages;
-//    @JsonProperty("n")
-//    private int n;
-//    @JsonProperty("stream")
-//    private boolean stream;
-//    @JsonProperty("max_tokens")
-//    private int maxTokens;
-//    @JsonProperty("repetition_penalty")
-//    private int repetitionPenalty;
-//    @JsonProperty("update_interval")
-//    private int updateInterval;
+    @JsonProperty("n")
+    private int n;
+    @JsonProperty("stream")
+    private boolean stream;
+    @JsonProperty("max_tokens")
+    private int maxTokens;
+    @JsonProperty("repetition_penalty")
+    private int repetitionPenalty;
+    @JsonProperty("update_interval")
+    private int updateInterval;
 }

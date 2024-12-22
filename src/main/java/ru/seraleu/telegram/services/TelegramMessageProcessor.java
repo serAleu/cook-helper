@@ -2,6 +2,7 @@ package ru.seraleu.telegram.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -9,8 +10,16 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.seraleu.gigachat.services.GigachatClientService;
+import ru.seraleu.telegram.users.TelegramUser;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
+import static ru.seraleu.telegram.users.TelegramRequestType.*;
+import static ru.seraleu.telegram.users.TelegramResponseType.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -19,11 +28,16 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
 
     private final String telegramBotToken;
     private final GigachatClientService gigachatClientService;
+    private final List<String> swearings;
 
-    @Value("${web.telegram.bot-username}")
+    @Value("${telegram.web.bot-username}")
     private String webTelegramBotUsername;
-    @Value("${web.telegram.admin-chat-id}")
+    @Value("${telegram.web.admin-chat-id}")
     private Long webTelegramAdminChatId;
+    @Value("${telegram.swearing.reply}")
+    private String telegramSwearingReply;
+
+    private final Map<Long, String> oneMessageFromChat = new ConcurrentHashMap<>();
 
     public void sendMessage(String str, Long webTelegramAdminChatId) {
         SendMessage sendMessage = new SendMessage();
@@ -40,26 +54,53 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         try {
             if (update.hasMessage() && update.getMessage().hasText()) {
-                String response = "no response";
-                long chatId = update.getMessage().getChatId();
-                String requestText = update.getMessage().getText();
-                String memberName = update.getMessage().getFrom().getFirstName();
-                if (requestText.equals("/start")) {
-                    startBot(chatId, memberName);
+                SendMessage message = new SendMessage();
+                TelegramUser user = getTelegramUser(update);
+                if(isRequestContainSwearing(user.getRequestsMap().get(INITIAL_REQUEST))) {
+                    message.setText(user.getRequestsMap().get(SWEAR_REQUEST));
                 } else {
-                    System.out.println("GIGA REQUEST " + requestText);
-                    response = gigachatClientService.askGigachatQuestion(requestText);
-                    response = memberName + ", вот, что я для тебя нашел: " + response;
-                    SendMessage message = new SendMessage();
-                    message.setChatId(chatId);
-                    message.setText(response);
-                    execute(message);
+                    if (user.getRequestsMap().get(INITIAL_REQUEST).equals("/start")) {
+                        startBot(user.getChatId(), user.getUserName());
+                    } else {
+                        System.out.println("GIGA REQUEST " + user.getRequestsMap().get(INITIAL_REQUEST));
+                        user = gigachatClientService.askGigachatForGettingProductList(user);
+                        if(user.getResponsesMap().containsKey()) {
+                            user = gigachatClientService.askGigachatQuestion(user);
+                            response = user.getUserName() + ", вот, что я для тебя нашел: " + response;
+                            message.setChatId(user.getChatId());
+                            message.setText(user.getUserName() + ", вот, что я для тебя нашел: " + );
+                        }
+                    }
                 }
-                sendStatistics(requestText, response);
+                message.setChatId(user.getChatId());
+                execute(message);
+                sendStatistics(user.getRequestsMap().get(INITIAL_REQUEST), response);
             }
         } catch (TelegramApiException e) {
             log.error("Exception while telegram receiving and processing message. {}", getStackTrace(e));
         }
+    }
+
+    private TelegramUser getTelegramUser(Update update) {
+        return new TelegramUser()
+                .setUserName(update.getMessage().getFrom().getFirstName())
+                .setChatId(update.getMessage().getChatId())
+                .setRequestsMap(Map.of(
+                        INITIAL_REQUEST, update.getMessage().getText(),
+                        LIST_OF_PRODUCT_REQUEST, update.getMessage().getText()))
+                .setResponsesMap(Map.of(
+                        NO_RESPONSE, "no response",
+                        SWEARING_RESPONSE, telegramSwearingReply));
+    }
+
+    private boolean isRequestContainSwearing(String requestText) {
+        AtomicBoolean isContain = new AtomicBoolean(false);
+        swearings.forEach(swearing -> {
+            if(StringUtils.containsIgnoreCase(requestText, swearing)) {
+                isContain.set(true);
+            }
+        });
+        return isContain.get();
     }
 
     private void sendStatistics(String request, String response) throws TelegramApiException {

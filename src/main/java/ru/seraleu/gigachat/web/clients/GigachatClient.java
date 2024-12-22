@@ -9,7 +9,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import ru.seraleu.gigachat.GigachatUtils;
 import ru.seraleu.gigachat.utils.GigachatAuthContext;
 import ru.seraleu.gigachat.web.dto.requests.RequestDto;
 import ru.seraleu.gigachat.web.dto.responses.ResponseDto;
@@ -23,8 +22,8 @@ public class GigachatClient {
 
     private final RestTemplate gigachatClientRestTemplate;
     private final ObjectMapper mapper;
-    @Value("${web.gigachat.client.uri}")
-    private String webGigachatClientUri;
+    @Value("${gigachat.web.client.uri}")
+    private String gigachatWebClientUri;
 
     public ResponseDto askGigachatQuestion(RequestDto requestDto) {
         String response = null;
@@ -34,7 +33,7 @@ public class GigachatClient {
             String requestJson = mapper.writeValueAsString(requestDto);
             System.out.println("REQUEST JSON: " + requestJson);
             HttpEntity<String> request = new HttpEntity<>(requestJson, headers);
-            response = gigachatClientRestTemplate.postForObject(webGigachatClientUri, request, String.class);
+            response = gigachatClientRestTemplate.postForObject(gigachatWebClientUri, request, String.class);
             System.out.println("GIGA REPLY " + response);
             if(!StringUtils.isBlank(response)) {
                 return mapper.readValue(response, ResponseDto.class);

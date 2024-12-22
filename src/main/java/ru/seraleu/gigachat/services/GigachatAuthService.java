@@ -24,8 +24,8 @@ public class GigachatAuthService {
 
     private final GigachatAuthClient gigachatAuthClient;
     private final ObjectMapper mapper;
-    @Value("${web.gigachat.auth.last-auth-key-path}")
-    private String webGigachatAuthLastAuthKeyPath;
+    @Value("${gigachat.web.auth.last-auth-key-path}")
+    private String gigachatWebAuthLastAuthKeyPath;
 
     public void updateAuthKey() throws IOException {
         if(StringUtils.isBlank(GigachatAuthContext.accessToken) || isAccessTokenExpired()) {
@@ -55,7 +55,7 @@ public class GigachatAuthService {
 
     private void getAccessTokenFromFile() {
         try {
-            File file = new File(webGigachatAuthLastAuthKeyPath);
+            File file = new File(gigachatWebAuthLastAuthKeyPath);
             if(file.isFile()) {
                 try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                     setAccessTokenAndExpiresAt(mapper, reader.readLine());
@@ -68,7 +68,7 @@ public class GigachatAuthService {
 
     @SuppressWarnings({"ResultOfMethodCallIgnored"})
     private void keepLastAuthKey(String responseJson) throws IOException {
-        File file = new File(webGigachatAuthLastAuthKeyPath);
+        File file = new File(gigachatWebAuthLastAuthKeyPath);
         file.getParentFile().mkdirs();
         file.createNewFile();
         try (PrintWriter writer = new PrintWriter(file)) {
