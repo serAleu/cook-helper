@@ -7,12 +7,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.seraleu.gigachat.services.GigachatClientService;
 import ru.seraleu.telegram.users.TelegramRequestType;
 import ru.seraleu.telegram.users.TelegramUser;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,13 +76,14 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
                         user = gigachatClientService.askGigachatForGettingProductList(user);
                         if(user.getRequestsMap().containsKey(LIST_OF_DISHES_REQUEST)) {
                             user = gigachatClientService.askGigachatQuestion(user);
+                            //вот здесь отдельный метод где юзеру отправляется та инфа которая получилсас
                             message.setText(user.getUserName() + ", вот, что я для тебя нашел: " + user.getRequestsMap().get(LIST_OF_DISHES_REQUEST));
                         }
                     }
                 }
                 message.setChatId(user.getChatId());
                 execute(message);
-                sendStatistics(user.getRequestsMap().get(INITIAL_REQUEST), user.getRequestsMap().get(LIST_OF_DISHES_REQUEST));
+                sendStatistics(user.getRequestsMap().get(INITIAL_REQUEST), message.getText());
             }
         } catch (TelegramApiException e) {
             log.error("Exception while telegram receiving and processing message. {}", getStackTrace(e));
@@ -119,7 +129,18 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
                 "другом месте где у тебя может заваляться что нибудь интересное). Просто напиши мне свои ингредиенты в свободной " +
                 "форме и предложу тебе несколько блюд, которые ты сможешь из них приготовить!");
 
+        InputStream stream;
         try {
+            stream = Files.newInputStream(Path.of("src/main/resources/telegram/start_image.jpg"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        SendPhoto sendPhoto = new SendPhoto();
+        sendPhoto.setChatId(chatId);
+        sendPhoto.setPhoto(new InputFile(stream, "src/main/resources/telegram/start_image.jpg"));
+
+        try {
+            execute(sendPhoto);
             execute(message);
             log.info("Reply sent");
         } catch (TelegramApiException e){
