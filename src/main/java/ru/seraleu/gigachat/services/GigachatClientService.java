@@ -37,7 +37,7 @@ public class GigachatClientService {
             gigachatAuthService.updateAuthKey();
             String gigaListOfProductsResponse = getProductsFromUserRequest(user.getRequestsMap().get(LIST_OF_PRODUCT_REQUEST));
             if (StringUtils.isBlank(gigaListOfProductsResponse)) {
-                user.getResponsesMap().put(SWEARING_RESPONSE, gigachatWebErrorsIncorrectRequest);
+                user.getResponsesMap().put(NO_RESPONSE, gigachatWebErrorsIncorrectRequest);
                 return user;
             }
             if(StringUtils.containsIgnoreCase("FAILURE", gigaListOfProductsResponse)) {

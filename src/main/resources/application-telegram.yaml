@@ -4,6 +4,10 @@ telegram:
     admin-chat-id: 1026435138
     auth:
       token: ${WEB_TELEGRAM_AUTH_TOKEN}
+  start:
+    message: Приветственное сообщение
+    button: Нажимай, сучка
+    image-path: src/main/resources/telegram/start_image.jpg
   swearing:
     is_enabled: true
     path: src/main/resources/telegram/swearing.txt
