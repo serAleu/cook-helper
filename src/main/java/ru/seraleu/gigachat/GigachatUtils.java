@@ -39,11 +39,11 @@ public class GigachatUtils {
     private String gigachatWebStatusFailure;
     @Value("${gigachat.web.fake-message.behaviour}")
     private String gigachatWebFakeMessageBehaviour;
-    @Value("${gigachat.web.fake-message.product-list}")
-    private String gigachatWebFakeMessageProductList;
+    @Value("${gigachat.web.fake-message.slovotbirator}")
+    private String gigachatWebFakeMessageSlovotbirator;
 
     public RequestDto createGigaRequestForGettingListOfProduct(String question) {
-        RequestDto requestDto = getRequestDtoWithFakeStory(gigachatWebFakeMessageProductList);
+        RequestDto requestDto = getRequestDtoWithFakeStory(gigachatWebFakeMessageSlovotbirator);
         requestDto.getMessages().add(new RequestMessageDto().setRole(gigachatWebRequestRole).setContent(question));
         return requestDto
                 .setMaxTokens(512)
