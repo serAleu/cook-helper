@@ -24,10 +24,10 @@ gigachat:
       uri: /api/v1/chat/completions
     fake-message:
       behaviour:
-        path: src/main/resources/gigachat/set_all_behaviour.json
+        path: src/main/resources/gigachat/dishes_promt.json
         xSessionId: f046c7d6-4cdb-414f-a13b-170841515fd6
       slovotbirator:
-        path: src/main/resources/gigachat/slovotbirator.json
+        path: src/main/resources/gigachat/slovotbirator_promt.json
         xSessionId: b675c2e5-6248-4764-aa0c-1beee296c6dd
         request: |
           Для формирования ответа на это сообщение, используй программу - Словотбиратор:

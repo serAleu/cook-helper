@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
-import static ru.seraleu.telegram.users.TelegramRequestType.LIST_OF_DISHES_REQUEST;
+import static ru.seraleu.telegram.users.TelegramRequestType.DISHES_REQUEST;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -64,11 +64,11 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
         telegramUtils.updateTelegramUserMap(update);
         TelegramUser user = gigachatClientService.askGigachatSlovotbirator(TELEGRAM_USERS_MAP.get(chatId));
         TELEGRAM_USERS_MAP.put(chatId, user);
-        if (TELEGRAM_USERS_MAP.get(chatId).getRequestsMap().containsKey(LIST_OF_DISHES_REQUEST)) {
+        if (TELEGRAM_USERS_MAP.get(chatId).getRequestsMap().containsKey(DISHES_REQUEST)) {
             user = gigachatClientService.askGigachatQuestion(TELEGRAM_USERS_MAP.get(chatId));
             TELEGRAM_USERS_MAP.put(chatId, user);
             //вот здесь отдельный метод где юзеру отправляется та инфа которая получилсас
-            message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + ", вот, что я для тебя нашел: " + TELEGRAM_USERS_MAP.get(chatId).getRequestsMap().get(LIST_OF_DISHES_REQUEST));
+            message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + ", вот, что я для тебя нашел: " + TELEGRAM_USERS_MAP.get(chatId).getRequestsMap().get(DISHES_REQUEST));
         }
     }
 

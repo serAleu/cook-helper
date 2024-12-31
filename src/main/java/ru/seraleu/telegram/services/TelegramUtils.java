@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 import static ru.seraleu.telegram.services.TelegramMessageProcessor.TELEGRAM_USERS_MAP;
 import static ru.seraleu.telegram.users.TelegramRequestType.INITIAL_REQUEST;
-import static ru.seraleu.telegram.users.TelegramRequestType.LIST_OF_PRODUCT_REQUEST;
+import static ru.seraleu.telegram.users.TelegramRequestType.SLOVOTBIRATOR_REQUEST;
 import static ru.seraleu.telegram.users.TelegramResponseType.NO_RESPONSE;
 import static ru.seraleu.telegram.users.TelegramResponseType.START_RESPONSE;
 
@@ -91,7 +91,7 @@ public class TelegramUtils {
                     .setChatId(update.getMessage().getChatId())
                     .setRequestsMap(new HashMap<>() {{
                         put(INITIAL_REQUEST, update.getMessage().getText());
-                        put(LIST_OF_PRODUCT_REQUEST, update.getMessage().getText());
+                        put(SLOVOTBIRATOR_REQUEST, update.getMessage().getText());
                     }})
                     .setResponsesMap(new HashMap<>() {{
                         put(NO_RESPONSE, "no response");

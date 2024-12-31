@@ -95,7 +95,7 @@ public class GigachatUtils {
         return response;
     }
 
-    public String parseGigaProductListResponseToString(ResponseDto responseDto) {
+    public String parseGigaSlovotbiratorResponseToString(ResponseDto responseDto) {
         return responseDto.getChoices().get(0).getMessage().getContent();
     }
 
