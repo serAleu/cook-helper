@@ -37,14 +37,16 @@ public class GigachatUtils {
     private String gigachatWebStatusSuccess;
     @Value("${gigachat.web.status.failure}")
     private String gigachatWebStatusFailure;
-    @Value("${gigachat.web.fake-message.behaviour}")
-    private String gigachatWebFakeMessageBehaviour;
-    @Value("${gigachat.web.fake-message.slovotbirator}")
-    private String gigachatWebFakeMessageSlovotbirator;
+    @Value("${gigachat.web.fake-message.behaviour.path}")
+    private String gigachatWebFakeMessageBehaviourPath;
+    @Value("${gigachat.web.fake-message.slovotbirator.path}")
+    private String gigachatWebFakeMessageSlovotbiratorPath;
+    @Value("${gigachat.web.fake-message.slovotbirator.request}")
+    private String gigachatWebFakeMessageSlovotbiratorRequest;
 
-    public RequestDto createGigaRequestForGettingListOfProduct(String question) {
-        RequestDto requestDto = getRequestDtoWithFakeStory(gigachatWebFakeMessageSlovotbirator);
-        requestDto.getMessages().add(new RequestMessageDto().setRole(gigachatWebRequestRole).setContent(question));
+    public RequestDto createGigaRequestForSlovotbiratorCalling(String question) {
+        RequestDto requestDto = getRequestDtoWithFakeStory(gigachatWebFakeMessageSlovotbiratorPath);
+        requestDto.getMessages().add(new RequestMessageDto().setRole(gigachatWebRequestRole).setContent(gigachatWebFakeMessageSlovotbiratorRequest + question));
         return requestDto
                 .setMaxTokens(512)
                 .setN(1)
@@ -55,7 +57,7 @@ public class GigachatUtils {
     }
 
     public RequestDto createGigaRequestForDishesListGetting(String question) {
-        RequestDto requestDto = getRequestDtoWithFakeStory(gigachatWebFakeMessageBehaviour);
+        RequestDto requestDto = getRequestDtoWithFakeStory(gigachatWebFakeMessageBehaviourPath);
         requestDto.getMessages().add(new RequestMessageDto().setRole(gigachatWebRequestRole).setContent(gigachatWebRequestContent + question));
         return requestDto
                 .setMaxTokens(512)
@@ -98,15 +100,16 @@ public class GigachatUtils {
     }
 
     private RequestDto getRequestDtoWithFakeStory(String filePath) {
+        RequestDto request = new RequestDto();
         try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filePath)))) {
             StringBuilder fakeStory = new StringBuilder();
             while (reader.ready()) {
                 fakeStory.append(reader.readLine());
             }
-            return mapper.reader().forType(RequestDto.class).readValue(String.valueOf(fakeStory));
+            request = mapper.reader().forType(RequestDto.class).readValue(String.valueOf(fakeStory));
         } catch (Exception e) {
             log.error("Error while fake story reading. {}", getStackTrace(e));
         }
-        return new RequestDto();
+        return request;
     }
 }

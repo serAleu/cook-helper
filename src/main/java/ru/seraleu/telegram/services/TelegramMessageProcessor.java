@@ -5,17 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
-import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.seraleu.gigachat.services.GigachatClientService;
 import ru.seraleu.telegram.users.TelegramUser;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,7 +62,7 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
     private void processUserRequest(Update update, SendMessage message) {
         Long chatId = update.getMessage().getChatId();
         telegramUtils.updateTelegramUserMap(update);
-        TelegramUser user = gigachatClientService.askGigachatForGettingProductList(TELEGRAM_USERS_MAP.get(chatId));
+        TelegramUser user = gigachatClientService.askGigachatSlovotbirator(TELEGRAM_USERS_MAP.get(chatId));
         TELEGRAM_USERS_MAP.put(chatId, user);
         if (TELEGRAM_USERS_MAP.get(chatId).getRequestsMap().containsKey(LIST_OF_DISHES_REQUEST)) {
             user = gigachatClientService.askGigachatQuestion(TELEGRAM_USERS_MAP.get(chatId));

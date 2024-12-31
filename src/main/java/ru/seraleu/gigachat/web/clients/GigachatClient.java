@@ -25,11 +25,12 @@ public class GigachatClient {
     @Value("${gigachat.web.client.uri}")
     private String gigachatWebClientUri;
 
-    public ResponseDto askGigachatQuestion(RequestDto requestDto) {
+    public ResponseDto askGigachatQuestion(RequestDto requestDto, String xSessionId) {
         String response = null;
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + GigachatAuthContext.accessToken);
+            headers.set("X-Session-ID", xSessionId);
             String requestJson = mapper.writeValueAsString(requestDto);
             System.out.println("REQUEST JSON: " + requestJson);
             HttpEntity<String> request = new HttpEntity<>(requestJson, headers);
