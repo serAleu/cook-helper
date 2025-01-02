@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import ru.seraleu.telegram.users.TelegramCommunicationStep;
 import ru.seraleu.telegram.users.TelegramUser;
 
 import java.io.File;
@@ -20,17 +21,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 import static ru.seraleu.telegram.services.TelegramMessageProcessor.TELEGRAM_USERS_MAP;
-import static ru.seraleu.telegram.users.TelegramRequestType.INITIAL_REQUEST;
-import static ru.seraleu.telegram.users.TelegramRequestType.SLOVOTBIRATOR_REQUEST;
-import static ru.seraleu.telegram.users.TelegramResponseType.NO_RESPONSE;
-import static ru.seraleu.telegram.users.TelegramResponseType.START_RESPONSE;
+import static ru.seraleu.telegram.users.TelegramCommunicationStep.*;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class TelegramUtils {
 
-    private final List<String> swearings;
+    private final List<String> forbiddenWords;
 
     @Value("${telegram.start.button}")
     private String telegramStartButton;
@@ -39,10 +37,10 @@ public class TelegramUtils {
     @Value("${telegram.start.image-path}")
     private String telegramStartImagePath;
 
-    boolean isRequestContainSwearing(String requestText) {
+    boolean isRequestContainForbiddenWord(String requestText) {
         AtomicBoolean isContain = new AtomicBoolean(false);
-        swearings.forEach(swearing -> {
-            if(StringUtils.containsIgnoreCase(requestText, swearing)) {
+        forbiddenWords.forEach(forbiddenWord -> {
+            if (StringUtils.containsIgnoreCase(requestText, forbiddenWord)) {
                 isContain.set(true);
             }
         });
@@ -83,22 +81,32 @@ public class TelegramUtils {
         return inlineKeyboardMarkup;
     }
 
-    void updateTelegramUserMap(Update update) {
+    void addNewUserToMapOrClearOldErrorStatuses(Update update) {
         TelegramUser user = TELEGRAM_USERS_MAP.get(update.getMessage().getChatId());
-        if(user == null || StringUtils.isEmpty(user.getUserName()) || user.getChatId() == null) {
+        if (user == null || StringUtils.isEmpty(user.getUserName()) || user.getChatId() == null) {
             user = new TelegramUser()
                     .setUserName(update.getMessage().getFrom().getFirstName())
-                    .setChatId(update.getMessage().getChatId())
-                    .setRequestsMap(new HashMap<>() {{
-                        put(INITIAL_REQUEST, update.getMessage().getText());
-                        put(SLOVOTBIRATOR_REQUEST, update.getMessage().getText());
-                    }})
-                    .setResponsesMap(new HashMap<>() {{
-                        put(NO_RESPONSE, "no response");
-                        put(START_RESPONSE, telegramStartMessage);
-                    }});
-            TELEGRAM_USERS_MAP.put(user.getChatId(), user);
+                    .setChatId(update.getMessage().getChatId());
+        } else {
+            user.getUserCommunications().clear();
         }
+        user.setUserCommunications(new HashMap<>() {{
+            put(SLOVOTBIRATOR_REQUEST, update.getMessage().getText());
+        }});
+        TELEGRAM_USERS_MAP.put(user.getChatId(), user);
     }
 
+    public void updateTelegramUserMap(String message, TelegramCommunicationStep step, TelegramUser user) {
+        switch (step) {
+            case SLOVOTBIRATOR_REQUEST -> user.getUserCommunications().put(SLOVOTBIRATOR_REQUEST, message);
+            case NO_RESPONSE -> user.getUserCommunications().put(NO_RESPONSE, message);
+            case DISHES_REQUEST -> user.getUserCommunications().put(DISHES_REQUEST, message);
+            case DISHES_RESPONSE -> user.getUserCommunications().put(DISHES_RESPONSE, message);
+            case EXCEPTION_RESPONSE -> user.getUserCommunications().put(EXCEPTION_RESPONSE, message);
+            case SLOVOTBIRATOR_RESPONSE -> user.getUserCommunications().put(SLOVOTBIRATOR_RESPONSE, message);
+            case STUPID_GIGA_RESPONSE -> user.getUserCommunications().put(STUPID_GIGA_RESPONSE, message);
+            case STUPID_USER_RESPONSE -> user.getUserCommunications().put(STUPID_USER_RESPONSE, message);
+        }
+        TELEGRAM_USERS_MAP.put(user.getChatId(), user);
+    }
 }

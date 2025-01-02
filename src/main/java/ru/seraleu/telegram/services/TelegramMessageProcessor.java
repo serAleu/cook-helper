@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
-import static ru.seraleu.telegram.users.TelegramRequestType.DISHES_REQUEST;
+import static ru.seraleu.telegram.users.TelegramCommunicationStep.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -32,8 +32,8 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
     private String webTelegramBotUsername;
     @Value("${telegram.web.admin-chat-id}")
     private Long webTelegramAdminChatId;
-    @Value("${telegram.swearing.reply}")
-    private String telegramSwearingReply;
+    @Value("${telegram.forbidden-words.reply}")
+    private String telegramForbiddenWordsReply;
 
     @Override
     public void onUpdateReceived(Update update) {
@@ -45,13 +45,16 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
                 if (update.getMessage().getText().equals("/start")) {
                     execute(telegramUtils.startBot(update));
                 } else {
-                    if (telegramUtils.isRequestContainSwearing(update.getMessage().getText())) {
-                        message.setText(telegramSwearingReply);
+                    if (telegramUtils.isRequestContainForbiddenWord(update.getMessage().getText())) {
+                        message.setText(telegramForbiddenWordsReply);
                     } else {
-                        processUserRequest(update, message);
+                        //сейчас по дефолту считается, что когда мы доходим до сюда, то инсертим в мапу словотбиратор реквест, но надо сделать маршрутизацию через кнопочки в тг
+                        //добавь дефолтные ответы от гиги в обработку типа чел же может писать мат разными способами которые приложение пропустит а гига обидиться
+                        telegramUtils.addNewUserToMapOrClearOldErrorStatuses(update);
+                        processUserMainRequest(update, message);
                     }
-                    execute(message);
                     sendStatistics(update.getMessage().getFrom().getFirstName(), update.getMessage().getText(), message.getText());
+                    execute(message);
                 }
             }
         } catch (TelegramApiException e) {
@@ -59,16 +62,18 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
         }
     }
 
-    private void processUserRequest(Update update, SendMessage message) {
+    private void processUserMainRequest(Update update, SendMessage message) {
         Long chatId = update.getMessage().getChatId();
-        telegramUtils.updateTelegramUserMap(update);
-        TelegramUser user = gigachatClientService.askGigachatSlovotbirator(TELEGRAM_USERS_MAP.get(chatId));
-        TELEGRAM_USERS_MAP.put(chatId, user);
-        if (TELEGRAM_USERS_MAP.get(chatId).getRequestsMap().containsKey(DISHES_REQUEST)) {
-            user = gigachatClientService.askGigachatQuestion(TELEGRAM_USERS_MAP.get(chatId));
-            TELEGRAM_USERS_MAP.put(chatId, user);
-            //вот здесь отдельный метод где юзеру отправляется та инфа которая получилсас
-            message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + ", вот, что я для тебя нашел: " + TELEGRAM_USERS_MAP.get(chatId).getRequestsMap().get(DISHES_REQUEST));
+        gigachatClientService.askGigachatSlovotbirator(TELEGRAM_USERS_MAP.get(chatId));
+        if (TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().containsKey(DISHES_REQUEST)) {
+            gigachatClientService.askGigachatDishes(TELEGRAM_USERS_MAP.get(chatId));
+            message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + ", вот, что я для тебя нашел: " + TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().get(DISHES_RESPONSE));
+        } else if (TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().containsKey(NO_RESPONSE)) {
+            message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + " " + TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().get(NO_RESPONSE));
+        } else if (TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().containsKey(STUPID_USER_RESPONSE)) {
+            message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + " " + TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().get(STUPID_USER_RESPONSE));
+        } else if (TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().containsKey(STUPID_GIGA_RESPONSE)) {
+            message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + " " + TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().get(STUPID_GIGA_RESPONSE));
         }
     }
 
@@ -77,6 +82,7 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
         requestMessage.setChatId(webTelegramAdminChatId);
         requestMessage.setText(userName + " - REQUEST: " + request + "\n" + "RESPONSE: " + response);
         execute(requestMessage);
+        TELEGRAM_USERS_MAP.values().forEach(System.out::println);
     }
 
     @Override

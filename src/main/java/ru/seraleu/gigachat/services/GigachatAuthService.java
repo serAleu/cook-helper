@@ -1,6 +1,5 @@
 package ru.seraleu.gigachat.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -23,7 +22,6 @@ import static ru.seraleu.gigachat.utils.GigachatAuthContext.setAccessTokenAndExp
 public class GigachatAuthService {
 
     private final GigachatAuthClient gigachatAuthClient;
-    private final ObjectMapper mapper;
     @Value("${gigachat.web.auth.last-auth-key-path}")
     private String gigachatWebAuthLastAuthKeyPath;
 
@@ -58,7 +56,7 @@ public class GigachatAuthService {
             File file = new File(gigachatWebAuthLastAuthKeyPath);
             if(file.isFile()) {
                 try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                    setAccessTokenAndExpiresAt(mapper, reader.readLine());
+                    setAccessTokenAndExpiresAt(reader.readLine());
                 }
             }
         } catch (Exception e) {

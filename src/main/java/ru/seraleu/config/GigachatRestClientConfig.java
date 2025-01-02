@@ -1,5 +1,9 @@
 package ru.seraleu.config;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ssl.SslBundles;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -8,8 +12,17 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
+import ru.seraleu.gigachat.utils.GigachatAuthContext;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 @Configuration
+@Slf4j
 public class GigachatRestClientConfig {
 
     @Value("${gigachat.web.options.connect-timeout-millis}")
@@ -30,6 +43,13 @@ public class GigachatRestClientConfig {
     private String gigachatWebClientBaseUrl;
     @Value("${gigachat.web.auth.key}")
     private String gigachatWebAuthKey;
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return mapper;
+    }
 
     @Bean("gigachatAuthRestTemplate")
     public RestTemplate gigachatAuthRestTemplate(SslBundles sslBundles) {

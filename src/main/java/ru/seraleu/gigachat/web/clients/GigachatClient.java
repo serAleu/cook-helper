@@ -32,10 +32,10 @@ public class GigachatClient {
             headers.set("Authorization", "Bearer " + GigachatAuthContext.accessToken);
             headers.set("X-Session-ID", xSessionId);
             String requestJson = mapper.writeValueAsString(requestDto);
-            System.out.println("REQUEST JSON: " + requestJson);
+            log.info("GIGA REQUEST JSON: {}", requestJson);
             HttpEntity<String> request = new HttpEntity<>(requestJson, headers);
             response = gigachatClientRestTemplate.postForObject(gigachatWebClientUri, request, String.class);
-            System.out.println("GIGA REPLY " + response);
+            log.info("GIGA REPLY JSON: {}", response);
             if(!StringUtils.isBlank(response)) {
                 return mapper.readValue(response, ResponseDto.class);
             } else {

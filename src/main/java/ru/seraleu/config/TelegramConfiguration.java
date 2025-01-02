@@ -20,28 +20,12 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 @Slf4j
 public class TelegramConfiguration {
 
-    @Value("${telegram.swearing.path}")
-    private String telegramSwearingPath;
-
     @Value("${telegram.web.auth.token}")
     private String telegramBotToken;
 
     @Bean("telegramBotToken")
     public String telegramBotToken() {
         return telegramBotToken;
-    }
-
-    @Bean("swearings")
-    public List<String> swearings() {
-        List<String> swearings = new ArrayList<>();
-        try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(telegramSwearingPath)))) {
-            while (reader.ready()) {
-                swearings.add(reader.readLine());
-            }
-        } catch (Exception e) {
-            log.error("Error while swearings reading. {}", getStackTrace(e));
-        }
-        return swearings;
     }
 
     @Bean("telegramBotsApi")

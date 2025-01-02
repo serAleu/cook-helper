@@ -1,8 +1,9 @@
 package ru.seraleu.telegram.users;
 
-public enum TelegramResponseType {
-    START_RESPONSE,
+public enum TelegramCommunicationStep {
+    SLOVOTBIRATOR_REQUEST,
     SLOVOTBIRATOR_RESPONSE,
+    DISHES_REQUEST,
     DISHES_RESPONSE,
     STUPID_USER_RESPONSE,
     STUPID_GIGA_RESPONSE,

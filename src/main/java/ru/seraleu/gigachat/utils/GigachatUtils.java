@@ -1,4 +1,4 @@
-package ru.seraleu.gigachat;
+package ru.seraleu.gigachat.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +13,9 @@ import ru.seraleu.gigachat.web.dto.responses.ResponseDto;
 import java.io.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
@@ -22,6 +25,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 public class GigachatUtils {
 
     private final ObjectMapper mapper;
+    private final Map<String, List<String>> gigaResponseStatusesMap;
 
     @Value("${gigachat.web.request.role}")
     private String gigachatWebRequestRole;
@@ -33,16 +37,18 @@ public class GigachatUtils {
     private String gigachatWebRerequestContent;
     @Value("${gigachat.web.request.model}")
     private String gigachatWebRequestModel;
-    @Value("${gigachat.web.status.success}")
-    private String gigachatWebStatusSuccess;
-    @Value("${gigachat.web.status.failure}")
-    private String gigachatWebStatusFailure;
     @Value("${gigachat.web.fake-message.behaviour.path}")
     private String gigachatWebFakeMessageBehaviourPath;
     @Value("${gigachat.web.fake-message.slovotbirator.path}")
     private String gigachatWebFakeMessageSlovotbiratorPath;
     @Value("${gigachat.web.fake-message.slovotbirator.request}")
     private String gigachatWebFakeMessageSlovotbiratorRequest;
+
+    public String removeGigaStatusFormResponse(ResponseDto responseDto) {
+        AtomicReference<String> updatedResponse = new AtomicReference<>(responseDto.getChoices().get(0).getMessage().getContent());
+        gigaResponseStatusesMap.values().forEach(statusList -> statusList.forEach(status -> updatedResponse.set(StringUtils.replaceIgnoreCase(updatedResponse.get(), status, ""))));
+        return updatedResponse.get();
+    }
 
     public RequestDto createGigaRequestForSlovotbiratorCalling(String question) {
         RequestDto requestDto = getRequestDtoWithFakeStory(gigachatWebFakeMessageSlovotbiratorPath);
@@ -56,7 +62,7 @@ public class GigachatUtils {
                 .setUpdateInterval(0);
     }
 
-    public RequestDto createGigaRequestForDishesListGetting(String question) {
+    public RequestDto createGigaRequestForDishes(String question) {
         RequestDto requestDto = getRequestDtoWithFakeStory(gigachatWebFakeMessageBehaviourPath);
         requestDto.getMessages().add(new RequestMessageDto().setRole(gigachatWebRequestRole).setContent(gigachatWebRequestContent + question));
         return requestDto
@@ -83,20 +89,22 @@ public class GigachatUtils {
     }
 
     public boolean isResponseNotContainGigachatStatus(ResponseDto responseDto) {
+        AtomicBoolean isContain = new AtomicBoolean(false);
         String response = responseDto.getChoices().get(0).getMessage().getContent();
-        return !StringUtils.containsIgnoreCase(response, gigachatWebStatusSuccess)
-                && !StringUtils.containsIgnoreCase(response, gigachatWebStatusFailure);
+        gigaResponseStatusesMap.values().forEach(statuses -> statuses.forEach(status -> isContain.set(!StringUtils.containsIgnoreCase(response, status))));
+        return isContain.get();
     }
 
-    public String prepareGigaResponseForUser(ResponseDto responseDto) {
+    public boolean isResponseContainGigachatStatus(ResponseDto responseDto, String status) {
+        //посмотри может можно одним стримом тру\фолс возвращать
+        AtomicBoolean isContain = new AtomicBoolean(false);
         String response = responseDto.getChoices().get(0).getMessage().getContent();
-        response = StringUtils.replaceIgnoreCase(response, gigachatWebStatusSuccess, "");
-        response = StringUtils.replaceIgnoreCase(response, gigachatWebStatusFailure, "");
-        return response;
-    }
-
-    public String parseGigaSlovotbiratorResponseToString(ResponseDto responseDto) {
-        return responseDto.getChoices().get(0).getMessage().getContent();
+        gigaResponseStatusesMap.get(status).forEach(gigaStatus -> {
+            if(StringUtils.containsIgnoreCase(response, gigaStatus)) {
+                isContain.set(true);
+            }
+        });
+        return isContain.get();
     }
 
     private RequestDto getRequestDtoWithFakeStory(String filePath) {

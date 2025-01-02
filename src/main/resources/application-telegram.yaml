@@ -8,8 +8,8 @@ telegram:
     message: Приветственное сообщение
     button: Нажимай, сучка
     image-path: src/main/resources/telegram/start_image.jpg
-  swearing:
+  forbidden-words:
     is_enabled: true
-    path: src/main/resources/telegram/swearing.txt
+    path: src/main/resources/telegram/forbidden_words.txt
     reply: |
       Слыш петушара ебаная, ты за базаром следи, шнырь чмошный. Список ингредиентов прислал сюда, пернатый, я тебе список блюд в ответ. Вперед ебать.
