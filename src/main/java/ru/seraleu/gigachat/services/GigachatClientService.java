@@ -35,6 +35,14 @@ public class GigachatClientService {
     private String gigachatWebFakeMessageSlovotbiratorXSessionId;
     @Value("${gigachat.web.fake-message.behaviour.xSessionId}")
     private String gigachatWebFakeMessageBehaviourXSessionId;
+    @Value("${gigachat.web.fake-message.slovotbirator.path}")
+    private String gigachatWebFakeMessageSlovotbiratorPath;
+    @Value("${gigachat.web.fake-message.slovotbirator.request}")
+    private String gigachatWebFakeMessageSlovotbiratorRequest;
+    @Value("${gigachat.web.fake-message.behaviour.path}")
+    private String gigachatWebFakeMessageBehaviourPath;
+    @Value("${gigachat.web.request.content}")
+    private String gigachatWebRequestContent;
 
     public void askGigachatSlovotbirator(TelegramUser user) {
         try {
@@ -46,6 +54,8 @@ public class GigachatClientService {
             } else if (gigachatUtils.isResponseContainGigachatStatus(gigaSlovotbiratorResponse, "SUCCESS")) {
                 telegramUtils.updateTelegramUserMap(gigaSlovotbiratorResponse.getChoices().get(0).getMessage().getContent(), SLOVOTBIRATOR_RESPONSE, user);
                 telegramUtils.updateTelegramUserMap(gigachatUtils.removeGigaStatusFormResponse(gigaSlovotbiratorResponse), DISHES_REQUEST, user);
+            } else {
+                telegramUtils.updateTelegramUserMap(gigachatWebErrorsIncorrectRequest, NO_RESPONSE, user);
             }
         } catch (IOException e) {
             log.error("Exception while gigachat response processing. {}", getStackTrace(e));
@@ -56,7 +66,7 @@ public class GigachatClientService {
     public void askGigachatDishes(TelegramUser user) {
         try {
             gigachatAuthService.updateAuthKey();
-            RequestDto gigaDishesRequest = gigachatUtils.createGigaRequestForDishes(user.getUserCommunications().get(DISHES_REQUEST));
+            RequestDto gigaDishesRequest = gigachatUtils.createGigaRequest(user.getUserCommunications().get(DISHES_REQUEST), gigachatWebFakeMessageBehaviourPath, gigachatWebRequestContent);
             ResponseDto gigaFinalResponse = gigachatClient.askGigachatQuestion(gigaDishesRequest,gigachatWebFakeMessageBehaviourXSessionId);
             if(!gigachatUtils.isValidResponse(gigaFinalResponse) || gigachatUtils.isResponseNotContainGigachatStatus(gigaFinalResponse)) {
                 gigaFinalResponse = askGigachatQuestionAgainForValidResponse(gigaDishesRequest, user.getUserCommunications().get(DISHES_REQUEST));
@@ -73,9 +83,9 @@ public class GigachatClientService {
         }
     }
 
-    private ResponseDto callSlovotbirator(String question) throws IOException {
+    private ResponseDto callSlovotbirator(String userQuestion) throws IOException {
         gigachatAuthService.updateAuthKey();
-        RequestDto gigaRequestForSlovotbirator = gigachatUtils.createGigaRequestForSlovotbiratorCalling(question);
+        RequestDto gigaRequestForSlovotbirator = gigachatUtils.createGigaRequest(userQuestion, gigachatWebFakeMessageSlovotbiratorPath, gigachatWebFakeMessageSlovotbiratorRequest);
         ResponseDto gigaSlovotbiratorResponse = gigachatClient.askGigachatQuestion(gigaRequestForSlovotbirator, gigachatWebFakeMessageSlovotbiratorXSessionId);
         if(gigachatUtils.isValidResponse(gigaSlovotbiratorResponse)) {
             return gigaSlovotbiratorResponse;

@@ -37,12 +37,6 @@ public class GigachatUtils {
     private String gigachatWebRerequestContent;
     @Value("${gigachat.web.request.model}")
     private String gigachatWebRequestModel;
-    @Value("${gigachat.web.fake-message.behaviour.path}")
-    private String gigachatWebFakeMessageBehaviourPath;
-    @Value("${gigachat.web.fake-message.slovotbirator.path}")
-    private String gigachatWebFakeMessageSlovotbiratorPath;
-    @Value("${gigachat.web.fake-message.slovotbirator.request}")
-    private String gigachatWebFakeMessageSlovotbiratorRequest;
 
     public String removeGigaStatusFormResponse(ResponseDto responseDto) {
         AtomicReference<String> updatedResponse = new AtomicReference<>(responseDto.getChoices().get(0).getMessage().getContent());
@@ -50,21 +44,10 @@ public class GigachatUtils {
         return updatedResponse.get();
     }
 
-    public RequestDto createGigaRequestForSlovotbiratorCalling(String question) {
-        RequestDto requestDto = getRequestDtoWithFakeStory(gigachatWebFakeMessageSlovotbiratorPath);
-        requestDto.getMessages().add(new RequestMessageDto().setRole(gigachatWebRequestRole).setContent(gigachatWebFakeMessageSlovotbiratorRequest + question));
-        return requestDto
-                .setMaxTokens(512)
-                .setN(1)
-                .setStream(false)
-                .setModel(gigachatWebRequestModel)
-                .setRepetitionPenalty(1)
-                .setUpdateInterval(0);
-    }
-
-    public RequestDto createGigaRequestForDishes(String question) {
-        RequestDto requestDto = getRequestDtoWithFakeStory(gigachatWebFakeMessageBehaviourPath);
-        requestDto.getMessages().add(new RequestMessageDto().setRole(gigachatWebRequestRole).setContent(gigachatWebRequestContent + question));
+    public RequestDto createGigaRequest(String userQuestion, String path, String baseRequest) {
+        RequestDto requestDto = getRequestDtoWithFakeStory(path);
+        String content = (baseRequest + userQuestion).replaceAll("\n","");
+        requestDto.getMessages().add(new RequestMessageDto().setRole(gigachatWebRequestRole).setContent(content));
         return requestDto
                 .setMaxTokens(512)
                 .setN(1)

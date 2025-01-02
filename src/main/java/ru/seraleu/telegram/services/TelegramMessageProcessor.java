@@ -74,6 +74,8 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
             message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + " " + TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().get(STUPID_USER_RESPONSE));
         } else if (TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().containsKey(STUPID_GIGA_RESPONSE)) {
             message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + " " + TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().get(STUPID_GIGA_RESPONSE));
+        } else {
+            message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + " " + TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().get(NO_RESPONSE));
         }
     }
 

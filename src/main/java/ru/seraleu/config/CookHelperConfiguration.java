@@ -28,7 +28,7 @@ public class CookHelperConfiguration {
     public Map<String, List<String>> gigaResponseStatusesMap() {
         return new HashMap<>() {{
             put("SUCCESS", List.of("SUCCESS", "SUCCESS:"));
-            put("FAILURE", List.of("FAILURE", "FAILURE:"));
+            put("FAILURE", List.of("FAILURE", "FAILURE:", "GIGACHAT", "ГИГАЧАТ", "НЕЙРОСЕТЬ", "GIGA CHAT", "GIGA_CHAT", "GIGA-CHAT"));
         }};
     }
 
