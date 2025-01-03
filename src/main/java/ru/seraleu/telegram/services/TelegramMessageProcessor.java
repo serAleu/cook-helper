@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.seraleu.gigachat.services.GigachatClientService;
@@ -32,30 +33,28 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
     private String webTelegramBotUsername;
     @Value("${telegram.web.admin-chat-id}")
     private Long webTelegramAdminChatId;
-    @Value("${telegram.forbidden-words.reply}")
-    private String telegramForbiddenWordsReply;
 
     @Override
     public void onUpdateReceived(Update update) {
         try {
-            if (update.hasMessage() && update.getMessage().hasText() && update.getMessage().getChatId() != null) {
+            SendMessage message = new SendMessage();
+            if (update.hasMessage() && update.getMessage().getChatId() != null && update.getMessage().hasText()) {
                 Long chatId = update.getMessage().getChatId();
-                SendMessage message = new SendMessage();
                 message.setChatId(chatId);
                 if (update.getMessage().getText().equals("/start")) {
                     execute(telegramUtils.startBot(update));
                 } else {
-                    if (telegramUtils.isRequestContainForbiddenWord(update.getMessage().getText())) {
-                        message.setText(telegramForbiddenWordsReply);
-                    } else {
-                        //сейчас по дефолту считается, что когда мы доходим до сюда, то инсертим в мапу словотбиратор реквест, но надо сделать маршрутизацию через кнопочки в тг
-                        //добавь дефолтные ответы от гиги в обработку типа чел же может писать мат разными способами которые приложение пропустит а гига обидиться
-                        telegramUtils.addNewUserToMapOrClearOldErrorStatuses(update);
-                        processUserMainRequest(update, message);
-                    }
+                    //добавь дефолтные ответы от гиги в обработку типа чел же может писать мат разными способами которые приложение пропустит а гига обидиться
+                    telegramUtils.addUser(update);
+                    processUserMainRequest(update, message);
                     sendStatistics(update.getMessage().getFrom().getFirstName(), update.getMessage().getText(), message.getText());
-                    execute(message);
                 }
+                execute(message);
+            } else if (update.hasCallbackQuery() && update.getCallbackQuery().getId() != null) {
+                System.out.println("ПРИВ " + update.getCallbackQuery().getData());
+                message.setText(update.getCallbackQuery().getData());
+                message.setChatId(update.getCallbackQuery().getFrom().getId());
+                execute(message);
             }
         } catch (TelegramApiException e) {
             log.error("Exception while telegram receiving and processing message. {}", getStackTrace(e));
@@ -64,19 +63,13 @@ public class TelegramMessageProcessor extends TelegramLongPollingBot {
 
     private void processUserMainRequest(Update update, SendMessage message) {
         Long chatId = update.getMessage().getChatId();
-        gigachatClientService.askGigachatSlovotbirator(TELEGRAM_USERS_MAP.get(chatId));
-        if (TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().containsKey(DISHES_REQUEST)) {
-            gigachatClientService.askGigachatDishes(TELEGRAM_USERS_MAP.get(chatId));
-            message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + ", вот, что я для тебя нашел: " + TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().get(DISHES_RESPONSE));
-        } else if (TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().containsKey(NO_RESPONSE)) {
-            message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + " " + TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().get(NO_RESPONSE));
-        } else if (TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().containsKey(STUPID_USER_RESPONSE)) {
-            message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + " " + TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().get(STUPID_USER_RESPONSE));
-        } else if (TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().containsKey(STUPID_GIGA_RESPONSE)) {
-            message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + " " + TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().get(STUPID_GIGA_RESPONSE));
-        } else {
-            message.setText(TELEGRAM_USERS_MAP.get(chatId).getUserName() + " " + TELEGRAM_USERS_MAP.get(chatId).getUserCommunications().get(NO_RESPONSE));
+        if(TELEGRAM_USERS_MAP.get(chatId).getCurrentCommunicationStep().equals(SLOVOTBIRATOR_REQUEST)) {
+            gigachatClientService.askGigachatSlovotbirator(TELEGRAM_USERS_MAP.get(chatId));
         }
+        if (TELEGRAM_USERS_MAP.get(chatId).getCurrentCommunicationStep().equals(DISHES_REQUEST)) {
+            gigachatClientService.askGigachatDishes(TELEGRAM_USERS_MAP.get(chatId));
+        }
+        telegramUtils.defineMessageText(TELEGRAM_USERS_MAP.get(chatId), message);
     }
 
     private void sendStatistics(String userName, String request, String response) throws TelegramApiException {

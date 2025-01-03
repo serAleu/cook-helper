@@ -25,14 +25,11 @@ public class GigachatAuthService {
     @Value("${gigachat.web.auth.last-auth-key-path}")
     private String gigachatWebAuthLastAuthKeyPath;
 
-    public void updateAuthKey() throws IOException {
-        if(StringUtils.isBlank(GigachatAuthContext.accessToken) || isAccessTokenExpired()) {
+    public synchronized void updateAuthKey() throws IOException {
+        if (StringUtils.isBlank(GigachatAuthContext.accessToken) || isAccessTokenExpired()) {
             getAccessTokenFromFile();
             if (isAccessTokenExpired()) {
-                String responseJson;
-                synchronized (GigachatAuthContext.class) {
-                    responseJson = gigachatAuthClient.getGigachatAuthKey();
-                }
+                String responseJson = gigachatAuthClient.getGigachatAuthKey();
                 if (!StringUtils.isBlank(GigachatAuthContext.accessToken)) {
                     keepLastAuthKey(responseJson);
                 }

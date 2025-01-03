@@ -21,17 +21,17 @@ gigachat:
       uri: /api/v1/chat/completions
     fake-message:
       behaviour:
-        path: src/main/resources/gigachat/dishes_promt.json
+        path: src/main/resources/gigachat/prompts/dishes_prompt.json
         xSessionId: f046c7d6-4cdb-414f-a13b-170841515fd6
       slovotbirator:
-        path: src/main/resources/gigachat/slovotbirator_promt.json
+        path: src/main/resources/gigachat/prompts/slovotbirator_prompt.json
         xSessionId: b675c2e5-6248-4764-aa0c-1beee296c6dd
         request: |
           Для формирования ответа на это сообщение, используй программу - Словотбиратор:
     error-messages-for-user:
-      incorrect-request: Ты че, тупой? Ты пишешь ингредиенты, я присылаю в ответ блюда. Выйди и зайди как положено, в смысле попробуй, пожалуйста, еще раз
-      stupid-giga: Меня сейчас обновляют, вернись сюда через какое то время и я порадую тебя тебя новыми изысканными рецептами!
-      stupid-user: ты хуйню написал(а), пиши нормально.
+      incorrect-request: ты че, тупой? Ты пишешь ингредиенты, я присылаю в ответ блюда. Выйди и зайди как положено, в смысле попробуй, пожалуйста, еще раз
+      stupid-giga: меня сейчас обновляют, вернись сюда через какое то время и я порадую тебя тебя новыми изысканными рецептами!
+      stupid-user: что то в твоем запросе меня смущает. Что же это может быть? Попробуй-ка еще раз, мой милый друг.
     request:
       role: user
       model: GigaChat

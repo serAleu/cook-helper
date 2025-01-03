@@ -22,7 +22,6 @@ import static ru.seraleu.telegram.users.TelegramCommunicationStep.*;
 public class GigachatClientService {
 
     private final GigachatClient gigachatClient;
-    private final GigachatAuthService gigachatAuthService;
     private final GigachatUtils gigachatUtils;
     private final TelegramUtils telegramUtils;
     @Value("${gigachat.web.error-messages-for-user.stupid-giga}")
@@ -46,7 +45,7 @@ public class GigachatClientService {
 
     public void askGigachatSlovotbirator(TelegramUser user) {
         try {
-            ResponseDto gigaSlovotbiratorResponse = callSlovotbirator(user.getUserCommunications().get(SLOVOTBIRATOR_REQUEST));
+            ResponseDto gigaSlovotbiratorResponse = callSlovotbirator(user.getCommunications().get(SLOVOTBIRATOR_REQUEST));
             if (gigaSlovotbiratorResponse == null) {
                 telegramUtils.updateTelegramUserMap(gigachatWebErrorsIncorrectRequest, NO_RESPONSE, user);
             } else if (gigachatUtils.isResponseContainGigachatStatus(gigaSlovotbiratorResponse, "FAILURE")) {
@@ -65,26 +64,25 @@ public class GigachatClientService {
 
     public void askGigachatDishes(TelegramUser user) {
         try {
-            gigachatAuthService.updateAuthKey();
-            RequestDto gigaDishesRequest = gigachatUtils.createGigaRequest(user.getUserCommunications().get(DISHES_REQUEST), gigachatWebFakeMessageBehaviourPath, gigachatWebRequestContent);
+            RequestDto gigaDishesRequest = gigachatUtils.createGigaRequest(user.getCommunications().get(DISHES_REQUEST), gigachatWebFakeMessageBehaviourPath, gigachatWebRequestContent);
             ResponseDto gigaFinalResponse = gigachatClient.askGigachatQuestion(gigaDishesRequest,gigachatWebFakeMessageBehaviourXSessionId);
-            if(!gigachatUtils.isValidResponse(gigaFinalResponse) || gigachatUtils.isResponseNotContainGigachatStatus(gigaFinalResponse)) {
-                gigaFinalResponse = askGigachatQuestionAgainForValidResponse(gigaDishesRequest, user.getUserCommunications().get(DISHES_REQUEST));
-                if(!gigachatUtils.isValidResponse(gigaFinalResponse) || gigachatUtils.isResponseNotContainGigachatStatus(gigaFinalResponse)) {
+            if(!gigachatUtils.isValidResponse(gigaFinalResponse) || gigachatUtils.isResponseContainGigachatStatus(gigaFinalResponse, "SUCCESS")) {
+                gigaDishesRequest = gigachatUtils.updateGigaRequestForRerequestDishesListGetting(gigaDishesRequest, user.getCommunications().get(DISHES_REQUEST));
+                gigaFinalResponse = gigachatClient.askGigachatQuestion(gigaDishesRequest, gigachatWebFakeMessageBehaviourXSessionId);
+                if(!gigachatUtils.isValidResponse(gigaFinalResponse) || gigachatUtils.isResponseContainGigachatStatus(gigaFinalResponse, "SUCCESS")) {
                     telegramUtils.updateTelegramUserMap(gigachatWebErrorsStupidGiga, STUPID_GIGA_RESPONSE, user);
                 }
                 telegramUtils.updateTelegramUserMap(gigachatUtils.removeGigaStatusFormResponse(gigaFinalResponse), DISHES_RESPONSE, user);
             } else {
                 telegramUtils.updateTelegramUserMap(gigachatWebErrorsStupidGiga, STUPID_GIGA_RESPONSE, user);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Exception while gigachat response processing. {}", getStackTrace(e));
             telegramUtils.updateTelegramUserMap(gigachatWebErrorsStupidGiga, EXCEPTION_RESPONSE, user);
         }
     }
 
     private ResponseDto callSlovotbirator(String userQuestion) throws IOException {
-        gigachatAuthService.updateAuthKey();
         RequestDto gigaRequestForSlovotbirator = gigachatUtils.createGigaRequest(userQuestion, gigachatWebFakeMessageSlovotbiratorPath, gigachatWebFakeMessageSlovotbiratorRequest);
         ResponseDto gigaSlovotbiratorResponse = gigachatClient.askGigachatQuestion(gigaRequestForSlovotbirator, gigachatWebFakeMessageSlovotbiratorXSessionId);
         if(gigachatUtils.isValidResponse(gigaSlovotbiratorResponse)) {
@@ -92,11 +90,5 @@ public class GigachatClientService {
         } else {
             return null;
         }
-    }
-
-    private ResponseDto askGigachatQuestionAgainForValidResponse(RequestDto requestDto, String question) throws IOException {
-        gigachatAuthService.updateAuthKey();
-        requestDto = gigachatUtils.updateGigaRequestForRerequestDishesListGetting(requestDto, question);
-        return gigachatClient.askGigachatQuestion(requestDto, gigachatWebFakeMessageBehaviourXSessionId);
     }
 }

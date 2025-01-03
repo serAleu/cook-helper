@@ -29,8 +29,6 @@ public class GigachatUtils {
 
     @Value("${gigachat.web.request.role}")
     private String gigachatWebRequestRole;
-    @Value("${gigachat.web.request.content}")
-    private String gigachatWebRequestContent;
     @Value("${gigachat.web.rerequest.role}")
     private String gigachatWebRerequestRole;
     @Value("${gigachat.web.request.role}")
@@ -71,15 +69,7 @@ public class GigachatUtils {
                 && responseDto.getChoices().get(0).getMessage().getContent() != null;
     }
 
-    public boolean isResponseNotContainGigachatStatus(ResponseDto responseDto) {
-        AtomicBoolean isContain = new AtomicBoolean(false);
-        String response = responseDto.getChoices().get(0).getMessage().getContent();
-        gigaResponseStatusesMap.values().forEach(statuses -> statuses.forEach(status -> isContain.set(!StringUtils.containsIgnoreCase(response, status))));
-        return isContain.get();
-    }
-
     public boolean isResponseContainGigachatStatus(ResponseDto responseDto, String status) {
-        //посмотри может можно одним стримом тру\фолс возвращать
         AtomicBoolean isContain = new AtomicBoolean(false);
         String response = responseDto.getChoices().get(0).getMessage().getContent();
         gigaResponseStatusesMap.get(status).forEach(gigaStatus -> {

@@ -11,5 +11,3 @@ telegram:
   forbidden-words:
     is_enabled: true
     path: src/main/resources/telegram/forbidden_words.txt
-    reply: |
-      Слыш петушара ебаная, ты за базаром следи, шнырь чмошный. Список ингредиентов прислал сюда, пернатый, я тебе список блюд в ответ. Вперед ебать.

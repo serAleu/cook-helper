@@ -14,6 +14,6 @@ public class TelegramUser {
 
     private Long chatId;
     private String userName;
-    private Map<TelegramCommunicationStep, String> userCommunications;
-
+    private Map<TelegramCommunicationStep, String> communications;
+    private TelegramCommunicationStep currentCommunicationStep;
 }

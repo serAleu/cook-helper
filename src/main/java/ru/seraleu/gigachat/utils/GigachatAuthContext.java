@@ -39,7 +39,7 @@ public class GigachatAuthContext {
     public void init() throws IOException {
         objectMapper = mapper;
         File file = new File(gigachatWebAuthLastAuthKeyPath);
-        if(new File(gigachatWebAuthLastAuthKeyPath).isFile()) {
+        if(file.isFile()) {
             String lastAuthResponseJson = Files.readString(file.toPath(), Charset.defaultCharset());
             if(!StringUtils.isBlank(lastAuthResponseJson)) {
                 try {

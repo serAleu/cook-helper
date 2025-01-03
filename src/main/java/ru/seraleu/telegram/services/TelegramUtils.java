@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -36,6 +37,23 @@ public class TelegramUtils {
     private String telegramStartMessage;
     @Value("${telegram.start.image-path}")
     private String telegramStartImagePath;
+    @Value("${gigachat.web.error-messages-for-user.stupid-user}")
+    private String gigachatWebErrorsStupidUser;
+
+    public void updateTelegramUserMap(String message, TelegramCommunicationStep step, TelegramUser user) {
+        user.getCommunications().put(step, message);
+        user.setCurrentCommunicationStep(step);
+        TELEGRAM_USERS_MAP.put(user.getChatId(), user);
+    }
+
+    void defineMessageText(TelegramUser user, SendMessage message) {
+        switch (user.getCurrentCommunicationStep() != null ? user.getCurrentCommunicationStep() : NO_RESPONSE) {
+            case STUPID_GIGA_RESPONSE -> message.setText(TELEGRAM_USERS_MAP.get(user.getChatId()).getUserName() + ", " + TELEGRAM_USERS_MAP.get(user.getChatId()).getCommunications().get(STUPID_GIGA_RESPONSE));
+            case STUPID_USER_RESPONSE -> message.setText(TELEGRAM_USERS_MAP.get(user.getChatId()).getUserName() + ", " + TELEGRAM_USERS_MAP.get(user.getChatId()).getCommunications().get(STUPID_USER_RESPONSE));
+            case DISHES_RESPONSE -> message.setText(TELEGRAM_USERS_MAP.get(user.getChatId()).getUserName() + ", вот, что я для тебя нашел: " + TELEGRAM_USERS_MAP.get(user.getChatId()).getCommunications().get(DISHES_RESPONSE));
+            default -> message.setText(TELEGRAM_USERS_MAP.get(user.getChatId()).getUserName() + ", " + TELEGRAM_USERS_MAP.get(user.getChatId()).getCommunications().get(NO_RESPONSE));
+        }
+    }
 
     boolean isRequestContainForbiddenWord(String requestText) {
         AtomicBoolean isContain = new AtomicBoolean(false);
@@ -68,7 +86,7 @@ public class TelegramUtils {
     InlineKeyboardMarkup getStartButtonReplyMarkup() {
         InlineKeyboardButton startButton1 = new InlineKeyboardButton();
         startButton1.setText(telegramStartButton);
-        startButton1.setCallbackData("HZ1");
+        startButton1.setCallbackData("Че надо петушара");
 
         List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
         keyboardButtonsRow1.add(startButton1);
@@ -81,32 +99,23 @@ public class TelegramUtils {
         return inlineKeyboardMarkup;
     }
 
-    void addNewUserToMapOrClearOldErrorStatuses(Update update) {
+    void addUser(Update update) {
         TelegramUser user = TELEGRAM_USERS_MAP.get(update.getMessage().getChatId());
         if (user == null || StringUtils.isEmpty(user.getUserName()) || user.getChatId() == null) {
             user = new TelegramUser()
                     .setUserName(update.getMessage().getFrom().getFirstName())
                     .setChatId(update.getMessage().getChatId());
+        }
+        if(!isRequestContainForbiddenWord(update.getMessage().getText())) {
+            user.setCommunications(new HashMap<>() {{
+                put(SLOVOTBIRATOR_REQUEST, update.getMessage().getText());
+            }}).setCurrentCommunicationStep(SLOVOTBIRATOR_REQUEST);
+            updateTelegramUserMap(update.getMessage().getText(), SLOVOTBIRATOR_REQUEST, user);
         } else {
-            user.getUserCommunications().clear();
+            user.setCommunications(new HashMap<>() {{
+                put(STUPID_USER_RESPONSE, update.getMessage().getText());
+            }}).setCurrentCommunicationStep(STUPID_USER_RESPONSE);
+            updateTelegramUserMap(gigachatWebErrorsStupidUser, STUPID_USER_RESPONSE, user);
         }
-        user.setUserCommunications(new HashMap<>() {{
-            put(SLOVOTBIRATOR_REQUEST, update.getMessage().getText());
-        }});
-        TELEGRAM_USERS_MAP.put(user.getChatId(), user);
-    }
-
-    public void updateTelegramUserMap(String message, TelegramCommunicationStep step, TelegramUser user) {
-        switch (step) {
-            case SLOVOTBIRATOR_REQUEST -> user.getUserCommunications().put(SLOVOTBIRATOR_REQUEST, message);
-            case NO_RESPONSE -> user.getUserCommunications().put(NO_RESPONSE, message);
-            case DISHES_REQUEST -> user.getUserCommunications().put(DISHES_REQUEST, message);
-            case DISHES_RESPONSE -> user.getUserCommunications().put(DISHES_RESPONSE, message);
-            case EXCEPTION_RESPONSE -> user.getUserCommunications().put(EXCEPTION_RESPONSE, message);
-            case SLOVOTBIRATOR_RESPONSE -> user.getUserCommunications().put(SLOVOTBIRATOR_RESPONSE, message);
-            case STUPID_GIGA_RESPONSE -> user.getUserCommunications().put(STUPID_GIGA_RESPONSE, message);
-            case STUPID_USER_RESPONSE -> user.getUserCommunications().put(STUPID_USER_RESPONSE, message);
-        }
-        TELEGRAM_USERS_MAP.put(user.getChatId(), user);
     }
 }

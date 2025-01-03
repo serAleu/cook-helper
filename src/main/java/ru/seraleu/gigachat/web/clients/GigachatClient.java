@@ -9,6 +9,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import ru.seraleu.gigachat.services.GigachatAuthService;
 import ru.seraleu.gigachat.utils.GigachatAuthContext;
 import ru.seraleu.gigachat.web.dto.requests.RequestDto;
 import ru.seraleu.gigachat.web.dto.responses.ResponseDto;
@@ -20,6 +21,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 @Slf4j
 public class GigachatClient {
 
+    private final GigachatAuthService gigachatAuthService;
     private final RestTemplate gigachatClientRestTemplate;
     private final ObjectMapper mapper;
     @Value("${gigachat.web.client.uri}")
@@ -34,6 +36,7 @@ public class GigachatClient {
             String requestJson = mapper.writeValueAsString(requestDto);
             log.info("GIGA REQUEST JSON: {}", requestJson);
             HttpEntity<String> request = new HttpEntity<>(requestJson, headers);
+            gigachatAuthService.updateAuthKey();
             response = gigachatClientRestTemplate.postForObject(gigachatWebClientUri, request, String.class);
             log.info("GIGA REPLY JSON: {}", response);
             if(!StringUtils.isBlank(response)) {
