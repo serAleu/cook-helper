@@ -1,6 +1,7 @@
 package ru.seraleu.telegram.users;
 
 public enum TelegramCommunicationStep {
+    DISHES_BUTTON_PUSHED,
     SLOVOTBIRATOR_REQUEST,
     SLOVOTBIRATOR_RESPONSE,
     DISHES_REQUEST,

@@ -8,7 +8,7 @@ import ru.seraleu.gigachat.utils.GigachatUtils;
 import ru.seraleu.gigachat.web.clients.GigachatClient;
 import ru.seraleu.gigachat.web.dto.requests.RequestDto;
 import ru.seraleu.gigachat.web.dto.responses.ResponseDto;
-import ru.seraleu.telegram.services.TelegramUtils;
+import ru.seraleu.telegram.utils.TelegramUtils;
 import ru.seraleu.telegram.users.TelegramUser;
 
 import java.io.IOException;
